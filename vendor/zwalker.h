@@ -52,10 +52,10 @@ typedef struct {
 	int pos;  
 
 	//Position of character found
-  int next;
+	int next;
 
 	//Size of block between current position and character position
-  int size;  
+	int size;  
 
 	//Options
 	int keep_token;
@@ -68,28 +68,21 @@ typedef struct {
 
 	//Internal pointers
 	unsigned char *ptr, *rptr;
-
-#ifndef ERR_H
-  int error;
- #ifndef ERRV_H
-	char  errmsg[ 127 ];
- #endif 
-#endif
 } zWalker;
 
 enum zWalkerToken {
-	ZWALKER_KEEP_TOKEN = 0
-, ZWALKER_DISCARD_TOKEN
+	ZWALKER_KEEP_TOKEN = 0,
+	ZWALKER_DISCARD_TOKEN
 };
 
 #define strwalk(a,b,c) \
- memwalk(a, (uint8_t *)b, (uint8_t *)c, strlen(b), strlen((char *)c))
+	memwalk(a, (uint8_t *)b, (uint8_t *)c, strlen(b), strlen((char *)c))
 
 #define meminit(mems, p, m) \
- Mem mems; \
- memset(&mems, 0, sizeof(Mem)); \
- mems.pos = p; \
- mems.it = m;
+	Mem mems; \
+	memset(&mems, 0, sizeof(Mem)); \
+	mems.pos = p; \
+	mems.it = m;
 
 #define memstrocc(blk,str,blklen) \
 	memblkocc( blk, str, blklen, strlen( str ) )
@@ -120,6 +113,6 @@ void zwalker_discard_tokens( zWalker * );
 
 void zwalker_init( zWalker * );
 
-int memjump (zWalker *, const uint8_t *, const uint8_t **, const int, const int * ) ;
+int memjump (zWalker *, const uint8_t *, const uint8_t **, const int, const int * );
 
 #endif

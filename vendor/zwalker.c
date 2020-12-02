@@ -34,6 +34,7 @@
  * ---------
  * 12-01-20 - Fixed a seek bug in memstr, adding tests
  *          - Added memblk functions. 
+ * 12-02-20 - Fixed an off-by-one bug in memblk* functions.
  * 
  * ------------------------------------------- */
 #include "zwalker.h"
@@ -63,11 +64,11 @@ int memchrat (const void *a, const char b, int size) {
 
 //Find a specific string in memory
 void * memblk (const void *a, const void *b, int size_a, int size_b) {
-	while ( --size_a > size_b ) {
+	while ( size_a >= size_b ) {
 		if ( *(unsigned char *)a == *(unsigned char *)b && !memcmp(a, b, size_b) ) {
 			return (void *)a;
 		}
-		a++; 
+		a++, size_a--;
 	}
 	return NULL;	
 }
@@ -76,11 +77,11 @@ void * memblk (const void *a, const void *b, int size_a, int size_b) {
 //Where exactly is a substr in memory
 int memblkat (const void *a, const void *b, int size_a, int size_b) {
 	int pos = 0;
-	while ( --size_a > size_b ) {
+	while ( size_a >= size_b ) {
 		if ( *(unsigned char *)a == *(unsigned char *)b && !memcmp(a, b, size_b) ) {
 			return pos;
 		}
-		a++, pos++;
+		a++, pos++, size_a--;
 	}
 	return -1;	
 }
@@ -89,7 +90,7 @@ int memblkat (const void *a, const void *b, int size_a, int size_b) {
 //Return count of occurences of a string in some block.
 int memblkocc (const void *a, const void *b, int size_a, int size_b ) {
 	int occ = 0;
-	while ( size_a > size_b ) {
+	while ( size_a >= size_b ) {
 		if ( *(unsigned char *)a == *(unsigned char *)b && !memcmp(a, b, size_b) ) {
 			occ++, a += size_b, size_a -= size_b;
 			continue;	
@@ -101,8 +102,7 @@ int memblkocc (const void *a, const void *b, int size_a, int size_b ) {
 
 
 //Walk through unsigned character data 
-int memwalk ( 
-		zWalker *w
+int memwalk ( zWalker *w
 	, const unsigned char * data
 	, const unsigned char * tokens
 	, const int datalen
@@ -113,7 +113,7 @@ int memwalk (
 	w->pos = w->next;
 
 	//Find the tokens specified, and bring back that position
-	while ( w->next++ < datalen && !memchr( tokens, *(w->ptr++), toklen ) ) ;
+	while ( ++w->next < datalen && !memchr( tokens, *(w->ptr++), toklen ) ) ;
 
 	//Die if no tokens were found
 	if ( w->next == datalen ) {
@@ -125,21 +125,12 @@ int memwalk (
 	w->size = w->next - w->pos;
 	w->chr = *( w->ptr - 1 );
 	w->rptr = w->ptr - 1;
-#if 0
-	fprintf(stderr, "I found a token: '%c'\n", w->chr );
-	fprintf(stderr, "position (current position in the string): %d\n", w->pos );
-	fprintf(stderr, "next (position after the token): %d\n", w->next );
-	fprintf(stderr, "size of workable block: %d\n", w->size );
-#endif
 	return 1; 
 }
 
-#include <unistd.h>
-#include <stdio.h>
 
 //"Jump" through unsigned character data (by looking for blocks larger than one character)
-int memjump (
-		zWalker *w
+int memjump ( zWalker *w
 	, const unsigned char * data
 	, const unsigned char ** tokens
 	, const int datalen
@@ -186,7 +177,6 @@ int memjump (
 	w->size = w->next - w->pos;
 	w->chr = *( w->ptr - 1 );
 	w->rptr = w->ptr - w->rsize;
-	
 	return 1;
 }
 
@@ -201,59 +191,4 @@ void zwalker_init( zWalker *w ) {
 void zwalker_discard_tokens( zWalker *w ) {
 	w->keep_token = ZWALKER_DISCARD_TOKEN;	
 }
-
-
-//...
-
-
-#if 0
-//Finds the 1st occurence of one char, Keep running until no tokens are found in range...
-int memtok (const void *a, const unsigned char *tokens, int sz, int tsz) {
-	int n, p = -1;
-	
-	for ( int i = 0; i < tsz; i++ ) {
-	#if 1
-		p = ( ( p > ( n = memchrat(a, tokens[i], sz) ) && n > -1 ) || p == -1 ) ? n : p;
-	#else
-	{
-		p = ((p > (n = memchrat(a, tokens[i], sz)) && n > -1) || p == -1) ? n : p;
-		fprintf(stderr, "found char %d at %d\n", tokens[i], memchrat(a, tokens[i], sz));
-		nmprintf("p is", p);
-	}
-	#endif
-	}
-	
-	return p;
-}
-
-
-//Finds the first occurrence of a complete token (usually a string). 
-//keep running until no more tokens are found.
-int memmatch (const void *a, const char *tokens, int sz, char delim) {
-	int p=-1, n, occ = -1;
-
-	/*Check that the user has supplied a delimiter. (or fail in the future)*/
-	if (!(occ = memchrocc(tokens, delim, strlen(tokens))))
-		return -1 /*I found nothing, sorry*/;
-
-	/*Initialize a temporary buffer for each copy*/
-	int t = 0; 
-	char buf[strlen(tokens) - occ];
-	memset(&buf, 0, strlen(tokens) - occ);
-
-	/*Loop through each string in the token list*/
-	while (t < strlen(tokens) && (n = memtok(&tokens[t], (unsigned char *)"|\0", sz, 2)) > -1) {
-		/*Copy to an empty buffer*/
-		memcpy(buf, &tokens[t], n);
-		buf[n] = '\0';
-		t += n + 1;
-
-		/*This should find the FIRST occurrence of what we're looking for within block*/
-		p = ((p > (n = memstrat(a, buf, sz)) && n > -1) || p == -1) ? n : p;
-		/*fprintf(stderr, "found str %s at %d\n", buf, memstrat(a, buf, sz)); nmprintf("p is", p);*/
-		memset(&buf, 0, strlen(tokens) - occ);
-	}
-	return p;
-}
-#endif
 
