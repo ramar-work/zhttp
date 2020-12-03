@@ -159,41 +159,53 @@ typedef enum {
 } HTTP_Error;
 
 
+typedef enum {
+	ZHTTP_URL_ENCODED
+, ZHTTP_MULTIPART
+} HttpContentType;
+
+
 struct HTTPRecord {
+	HttpContentType type; //multipart or not?
 	const char *field; 
-	const char *metadata; 
-	unsigned char *value; 
 	int size; 
+#if 1
+	unsigned char *value;
+	const char *disposition;
+	const char *filename;
+	const char *ctype;
+	unsigned char *data;
+#else
+	union {
+		unsigned char *uchars; 
+		struct HTTPMultipartContent {
+			const char *disposition;
+			const char *filename;
+			const char *type;
+			unsigned char *data;
+		} * mpc;
+	} value;
+#endif
 };
+
 
 struct HTTPBody {
 	char *path;
-	char *ctype; //content type ptr
+	char *ctype; 
 	char *host;
-#if 1
 	char *method;
 	char *protocol;
 	char *boundary;
-#else
-	char method[ 8 ];
-	char protocol[ 8 ];
-	char boundary[ 64 ];
-#endif
- 	unsigned char *msg;
 	int clen;  //content length
 	int mlen;  //message length (length of the entire received message)
 	int	hlen;  //header length
 	int status; //what was this?
-#if 0
-	//This may make things more efficient
-	struct HTTPRecord **values;
-#else
+	int error;
+ 	unsigned char *msg;
 	struct HTTPRecord **headers;
 	struct HTTPRecord **url;
 	struct HTTPRecord **body;
-	int error;
-	int rstatus;  //HEADER_PARSED, URL_PARSED, ...
-#endif
+	//int rstatus;  //HEADER_PARSED, URL_PARSED, ...
 };
 
 unsigned char *httpvtrim (unsigned char *, int , int *) ;

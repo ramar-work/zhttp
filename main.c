@@ -241,7 +241,6 @@ typedef struct TestCase {
 } TestCase;
 
 TestCase cases[] = {
-#if 0
 	{ GET_a, sizeof( GET_a ) },
 	{ GET_b, sizeof( GET_b ) },
 	{ GET_c, sizeof( GET_c ) },
@@ -249,13 +248,14 @@ TestCase cases[] = {
 	{ GET_e, sizeof( GET_e ) },
 	{ GET_f, sizeof( GET_f ) },
 	{ GET_g, sizeof( GET_g ) },
+#if 0
 	{ GET_h, sizeof( GET_h ) },
 	{ GET_i, sizeof( GET_i ) },
 	{ UNSUP_a, sizeof( UNSUP_a ) },
 	{ UNSUP_b, sizeof( UNSUP_b ) },
 	{ POST_a, sizeof( POST_a ) },
-	{ POST_b, sizeof( POST_b ) },
 #endif
+	{ POST_b, sizeof( POST_b ) },
 	{ POST_c, sizeof( POST_c ) },
 	{ NULL }
 };

@@ -218,9 +218,9 @@ static char * zhttp_msg_get_value ( const char *value, const char *chrs, unsigne
 	if ((start = memstrat( msg, value, len )) > -1) {
 		start += strlen( value );
 		msg += start;
+		int pend = -1;
 
 		//If chrs is more than one character, accept only the earliest match
-		int pend = -1;
 		while ( *chrs ) {
 			end = memchrat( msg, *chrs, len - start );
 			if ( end > -1 && pend > -1 && pend < end ) {
@@ -236,7 +236,7 @@ static char * zhttp_msg_get_value ( const char *value, const char *chrs, unsigne
 		}
 
 		//Prepare for edge cases...
-		if ((bContent = malloc( end + 1 )) == NULL ) {
+		if ( ( bContent = malloc( end + 1 ) ) == NULL ) {
 			return ""; 
 		}
 
@@ -379,7 +379,6 @@ static int parse_body( struct HTTPBody *entity, char *err, int errlen ) {
 	const char *methods = "application/x-www-form-urlencoded,multipart/form-data";
 	const char *idem = "POST,PUT,PATCH";
 	const char *multipart = "multipart/form-data";
-	struct HTTPRecord *b = NULL;
 
 	//TODO: If this is a xfer-encoding chunked msg, entity->clen needs to get filled in when done.
 	//TODO: Bitmasking is 1% more efficient, go for it.
@@ -400,6 +399,7 @@ static int parse_body( struct HTTPBody *entity, char *err, int errlen ) {
 
 	//url encoded is a little bit different.  no real reason to use the same code...
 	if ( strcmp( entity->ctype, "application/x-www-form-urlencoded" ) == 0 ) {
+		struct HTTPRecord *b = NULL;
 		while ( memwalk( &set, p, (unsigned char *)"=&", entity->clen, 2 ) ) {
 			unsigned char *m = &p[ set.pos ];  
 			if ( set.chr == '=' ) {
@@ -417,66 +417,58 @@ static int parse_body( struct HTTPBody *entity, char *err, int errlen ) {
 	}
 	
 	if ( memcmp( multipart, entity->ctype, strlen(multipart) ) == 0 ) {
-		int name=0, meta=0, index=0, block=0, size = 0;
-		const unsigned char bnd[] = "\r\n----";
-		//const char *ff = ( const char * )"F";
-		int bndlen = sizeof(bnd) - 1;
-		//p -= 2;
-		int ctype = 0;
-		//int len = entity->clen;
-		int blen = strlen( entity->boundary );
-#if 1
-		unsigned char *bbb = (unsigned char *)entity->boundary;
-		int len1 = entity->clen, ilen = 2 + blen, pp = 0;
-		p += ilen, len1 -= ilen;
+		char bd[ 128 ];
+		memset( &bd, 0, sizeof( bd ) );
+		sprintf( bd, "--%s", entity->boundary );
+		const int bdlen = strlen( bd );
+		int len1 = entity->clen, pp = 0;
 
-		while ( ( pp = memblkat( p, bbb, len1, blen ) ) > -1 ) {
-			write( 2, p, pp ); getchar();
-			//Now try walking through...?
-			//zWalker iset = {0};	
+		while ( ( pp = memblkat( p, bd, len1, bdlen ) ) > -1 ) {
 			int len2 = pp, inner = 0, count = 0;
 			unsigned char *i = p;
-			while ( ( inner = memblkat( i, "\r\n", len2, 2 ) ) > -1 ) {
-				write( 2, i, inner ); 
-				fprintf( stderr, "%d\n", inner );
-getchar();
-#if 1
-				if ( !inner ) 
-					;
-				else if ( count == 2 ) {
-					//save file contents
-				}
-				else if ( count == 1 ) {
-					//get content type
-				}
-				else if ( count == 0 ) {
-					//if filename does not exist, move count up again 
-					int name, filename = -1;
-					name = memblkat( i, "name=", inner, 5 );
-					filename = memblkat( i, "filename=", inner, 9 );
-					fprintf( stderr, "n %d, f %d\n", name, filename );
-					if ( filename == -1 ) {
-						fprintf( stderr, "nsize: %d\n", inner - 3 );
-						b->field = zhttp_copystr( i + name, inner - 3 ); 
-						count++;
+			struct HTTPRecord *b = init_record();
+			b->type = ZHTTP_MULTIPART;
+		#if 0 
+			fprintf( stderr, "START POINT======== len: %d \n", len2 ); write( 2, i, len2 );  getchar();
+		#endif
+			if ( len2 > 0 ) {	
+				i += bdlen + 1, len2 -= bdlen - 1;
+				//char *name, *filename, *ctype;
+
+				//Boundary was found, so we need to move up again
+				while ( ( inner = memblkat( i, "\r\n", len2, 2 ) ) > -1 ) {
+				#if 0
+					write( 2, i, inner ); fprintf( stderr, "count: %d, inner: %d\n", count, inner ); getchar();
+				#endif
+					if ( inner == 1 ) 
+						; //skip me
+					else if ( count > 1 )
+						b->size = inner - 1, b->value = i + 1;
+					else if ( count == 1 )
+						b->ctype = zhttp_msg_get_value( "Content-Type: ", "\r", i, inner );
+					else if ( count == 0 ) {
+						b->disposition = 
+							zhttp_msg_get_value( "Content-Disposition: ", ";", i, inner + 1 );
+						b->field = zhttp_msg_get_value( "name=\"", "\"", i, inner + 1 );
+						if ( memblkat( i, "filename=", inner, 9 ) > -1 ) {
+							b->filename = zhttp_msg_get_value( "filename=\"", "\"", i, inner - 1 );
+						}
+						//b->field = name;
 					}
-					else {
-						//fprintf( stderr, "fsize: %d\nhugh:", inner - filename - 3 );
-//fprintf( stderr, "char count: %d\n", inner - filename - name + 5 );
-//write( 2, &i[ name + 5 ], inner - (inner - filename) - (name + 5)); 
-						unsigned char *ii = i + (name + 6);
-						int size = inner - (inner - filename) - (name + 5); 
-//write( 2, ii, size - 4 );
-						b->field = zhttp_copystr( &i[name+6], size - 4 ); 
-						//b->field = zhttp_copystr( &i[ name ], inner - name ); 
-					}
+					++inner, len2 -= inner, i += inner, count++;
 				}
-#endif
-			  ++inner, len2 -= inner, i += inner;
-			}	
+			#if 0
+				fprintf( stderr, "NAME:\n" );
+				fprintf( stderr, "%s\n", b->field );
+				fprintf( stderr, "VALUE: %p, %d\n", b->value, b->size );
+				write( 2, b->value, b->size );
+				getchar();
+			#endif
+				zhttp_add_item( &entity->body, b, struct HTTPRecord *, &len );
+				b = NULL;
+			}
 			++pp, len1 -= pp, p += pp;	
 		}
-#endif
 	}
 	return 1;
 }
