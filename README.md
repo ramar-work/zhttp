@@ -1,21 +1,22 @@
 # zhttp
 
-zhttp is a library for walking through blocks of memory.  It was built as a less buggy / more useful replacement for strstr and friends.  It is composed of two files and can be dropped into your project with little issue. 
+zhttp is a library for dealing with HTTP messages.
 
 
 ## Installation
 
-To keep things simple, this will probably never be packaged officially.  zhttp will build on any Unix based platform with whatever compiler you choose.
+zhttp will build on any Unix based platform with whatever compiler you choose.  If just dropping into a program of your own, you will need the <a href="https://github.com/zaiah-dj/zwalker">zwalker</a> library.
 
 zhttp can be built with:
-	`gcc -Wall -Werror -std=c99 zhttp.c main.c`
+	`gcc -Wall -Werror -std=c99 zhttp.c relative/path/to/zwalker.c main.c`
 
 
 ## Usage
 
+<!-- Provided you are familiar with Unix sockets, using zhttp shouldn't be terribly difficult. -->
 
 
 
 ## Notes
 
-zhttp was extracted from a much larger library of mine called <a href="https://github.com/zaiah-dj/single">single.c</a>.  Much of that library has no use now, but this is one of the pieces that has found its way into my recent projects. 
+zhttp is in alpha state and is under HEAVY development at the moment. 
