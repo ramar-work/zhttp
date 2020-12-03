@@ -12,4 +12,7 @@ PREFIX = /usr/local
 VERSION = 0.01
 
 test:
-	$(CC) $(CFLAGS) -o zhttp-test zhttp.c vendor/zwalker.c main.c
+	$(CC) $(CFLAGS) -o $(NAME)-test $(NAME).c vendor/zwalker.c main.c
+
+clean:
+	rm -f *.o $(NAME)-test
