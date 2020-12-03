@@ -110,17 +110,22 @@ int memwalk ( zWalker *w
 {
 	//Setup the structure
 	w->ptr = (unsigned char *)( !w->ptr ? data : w->ptr );
-	w->pos = w->next;
+	if ( ( w->pos = w->next ) == datalen ) {
+		return 0;
+	}
 
 	//Find the tokens specified, and bring back that position
-	while ( ++w->next < datalen && !memchr( tokens, *(w->ptr++), toklen ) ) ;
-
+	while ( ++w->next < datalen && !memchr( tokens, *(w->ptr++), toklen ) ) { 
+		;//fprintf( stderr, "%d, %d\n", w->next, datalen );
+	}
+#if 0
 	//Die if no tokens were found
 	if ( w->next == datalen ) {
 		//fprintf(stderr, "No tokens found, stopping.\n" );
 		return 0;
 	}	
-
+	//fprintf(stderr, "Got token '%c'.\n", *( w->ptr - 1 ) );
+#endif
 	//TODO: If you want to include the token, specify it...
 	w->size = w->next - w->pos;
 	w->chr = *( w->ptr - 1 );
@@ -138,8 +143,11 @@ int memjump ( zWalker *w
 {
 	//Setup the structure
 	w->ptr = (unsigned char *)( !w->ptr ? data : w->ptr );
-	w->pos = w->next;
 	w->rsize = 0;
+	w->pos = w->next;
+	if ( ( w->pos = w->next ) == datalen ) {
+		return 0;
+	}
 
 	//Find the tokens specified, and bring back that position
 	int match = 0;
@@ -167,11 +175,6 @@ int memjump ( zWalker *w
 
 		w->ptr++, w->next++;
 	}
-
-	//Die if no tokens were found
-	if ( w->next == datalen ) {
-		return 0;
-	}	
 
 	//TODO: If you want to include the token, specify it...
 	w->size = w->next - w->pos;

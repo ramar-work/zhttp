@@ -41,7 +41,7 @@
  #define _POSIX_C_SOURCE 200809L
 #endif 
 
-#include <inttypes.h>
+#include <stdio.h>
 #include <string.h>
 
 #ifndef ZWALKER_H
@@ -76,7 +76,7 @@ enum zWalkerToken {
 };
 
 #define strwalk(a,b,c) \
-	memwalk(a, (uint8_t *)b, (uint8_t *)c, strlen(b), strlen((char *)c))
+	memwalk(a, (unsigned char *)b, (unsigned char *)c, strlen(b), strlen((char *)c))
 
 #define meminit(mems, p, m) \
 	Mem mems; \
@@ -103,16 +103,16 @@ int memblkat (const void *, const void *, int, int);
 
 void * memblk (const void *, const void *, int, int);
 
-int memtok (const void *, const uint8_t *, int32_t, int32_t );
+int memtok (const void *, const unsigned char *, int, int );
 
-int memmatch (const void *, const char *, int32_t, char ); 
+int memmatch (const void *, const char *, int, char ); 
 
-int memwalk (zWalker *, const uint8_t *, const uint8_t *, const int, const int ) ;
+int memwalk (zWalker *, const unsigned char *, const unsigned char *, const int, const int ) ;
 
 void zwalker_discard_tokens( zWalker * );
 
 void zwalker_init( zWalker * );
 
-int memjump (zWalker *, const uint8_t *, const uint8_t **, const int, const int * );
+int memjump (zWalker *, const unsigned char *, const unsigned char **, const int, const int * );
 
 #endif

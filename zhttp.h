@@ -31,17 +31,31 @@
  *
  * CHANGELOG 
  * ---------
- * 12-01-20 - Fixed a seek bug in memstr, adding tests
- *          - Added memblk functions. 
- * 12-02-20 - Fixed an off-by-one bug in memblk* functions.
+ * 12-02-20 - 
  * 
  * ------------------------------------------- */
-#include "../vendor/zwalker.h"
-#include "../vendor/zhasher.h"
-#include "util.h"
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+#include "vendor/zwalker.h"
+
+#ifdef DEBUG_H
+ #include <stdio.h>
+ #define ZHTTP_PRINTF(...) \
+	fprintf( stderr, __VA_ARGS__ )
+ #define ZHTTP_WRITE(a,b) \
+	write( 2, a, b )
+#else
+ #define ZHTTP_PRINTF(...)
+ #define ZHTTP_WRITE(...)
+#endif
+
 #ifndef HTTP_H
 
 #define HTTP_H
+
+#define zhttp_add_item(LIST,ELEMENT,SIZE,LEN) \
+	zhttp_add_item_to_list( (void ***)LIST, ELEMENT, sizeof( SIZE ), LEN )
 
 #define http_free_request( entity ) \
 	http_free_body( entity )
@@ -74,13 +88,13 @@
 	http_set_record( ENTITY, &(ENTITY)->body, 1, ".", VAL, VLEN )
 
 #define http_set_content_text(ENTITY,VAL) \
-	http_set_record( ENTITY, &(ENTITY)->body, 1, ".", (uint8_t *)VAL, strlen(VAL) )
+	http_set_record( ENTITY, &(ENTITY)->body, 1, ".", (unsigned char *)VAL, strlen(VAL) )
 
 #define http_set_textbody(ENTITY,KEY,VAL) \
-	http_set_record( ENTITY, &(ENTITY)->body, 1, KEY, (uint8_t *)VAL, strlen((char *)VAL) )
+	http_set_record( ENTITY, &(ENTITY)->body, 1, KEY, (unsigned char *)VAL, strlen((char *)VAL) )
 	
 #define http_set_header(ENTITY,KEY,VAL) \
-	http_set_record( ENTITY, &(ENTITY)->headers, 0, KEY, (uint8_t *)VAL, strlen(VAL) )
+	http_set_record( ENTITY, &(ENTITY)->headers, 0, KEY, (unsigned char *)VAL, strlen(VAL) )
 
 extern const char http_200_fixed[];
 
@@ -148,7 +162,7 @@ typedef enum {
 struct HTTPRecord {
 	const char *field; 
 	const char *metadata; 
-	uint8_t *value; 
+	unsigned char *value; 
 	int size; 
 };
 
@@ -165,7 +179,7 @@ struct HTTPBody {
 	char protocol[ 8 ];
 	char boundary[ 64 ];
 #endif
- 	uint8_t *msg;
+ 	unsigned char *msg;
 	int clen;  //content length
 	int mlen;  //message length (length of the entire received message)
 	int	hlen;  //header length
@@ -182,18 +196,30 @@ struct HTTPBody {
 #endif
 };
 
-unsigned char *httpvtrim (uint8_t *, int , int *) ;
-unsigned char *httptrim (uint8_t *, const char *, int , int *) ;
+unsigned char *httpvtrim (unsigned char *, int , int *) ;
+
+unsigned char *httptrim (unsigned char *, const char *, int , int *) ;
+
 void print_httprecords ( struct HTTPRecord ** ) ;
+
 void print_httpbody ( struct HTTPBody * ) ;
+
 void http_free_body( struct HTTPBody * );
+
 struct HTTPBody * http_finalize_response (struct HTTPBody *, char *, int );
+
 struct HTTPBody * http_finalize_request (struct HTTPBody *, char *, int );
+
 struct HTTPBody * http_parse_request (struct HTTPBody *, char *, int );
+
 struct HTTPBody * http_parse_response (struct HTTPBody *, char *, int );
+
 int http_set_int( int *, int );
+
 char *http_set_char( char **, const char * );
-void *http_set_record( struct HTTPBody *, struct HTTPRecord ***, int, const char *, uint8_t *, int );
+
+void *http_set_record( struct HTTPBody *, struct HTTPRecord ***, int, const char *, unsigned char *, int );
+
 int http_set_error ( struct HTTPBody *entity, int status, char *message );
 
 #endif
