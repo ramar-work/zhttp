@@ -1,7 +1,7 @@
 /* ------------------------------------------- * 
- * main.c
+ * post.c
  * ---------
- * Tests for C-based HTTP parser, request and response builder 
+ * POST Tests for C-based HTTP parser, request and response builder 
  *
  * Usage
  * -----
@@ -36,89 +36,6 @@
  * 12-02-20 - Fixed an off-by-one bug in memblk* functions.
  * 
  * ------------------------------------------- */
-#include <stdio.h>
-#include "zhttp.h"
-
-#define TESTCASE(a) \
-	{ #a, a, sizeof( a ) }
-
-#include "tests/get.c"
-#include "tests/unsupported.c"
-#include "tests/post.c"
-#if 0
-#include "tests/connect.c"
-#include "tests/head.c"
-#include "tests/options.c"
-#include "tests/patch.c"
-#include "tests/put.c"
-#include "tests/trace.c"
-#endif
-
-
-#if 0
-//Test a bunch of different GET requests...
-const unsigned char GET_a[] = "G";
-
-const unsigned char GET_b[] = "GET\r\n";
-
-const unsigned char GET_c[] = "GET /\0 HTTP/1.0";
-
-const unsigned char GET_d[] = "GET / HTTP/1.7";
-
-const unsigned char GET_e[] = 
-"GET / HTTP/1.1\r\r\r\n"
-"Host: domo.hypno:2333\r\n"
-"Connection: keep-alive"
-"\r\n\r\n";
-
-const unsigned char GET_f[] = //Weird issue with allocation...
-"GET /path/not/life/1/2/3/4/5/6/7 HTTP/1.1"
-"Host: domo.hypno:2333"
-"Connection: keep-alive"
-"\r\n\r\n";
-
-const unsigned char GET_g[] = 
-"GET /path/not/life/1/2/3/4/5/6/7 HTTP/1.1\r\n"
-"Host: domo.hypno:2333\r\n"
-"Connection: keep-alive"
-"\r\n\r\n";
-
-const unsigned char GET_h[] = 
-"GET /path/of/prot?abcdef=wopdawg&hella_awesome=1&aa=bb HTTP/1.1\r\n"
-"Host: domo.hypno:2333\r\n"
-"Connection: keep-alive"
-"\r\n\r\n";
-
-const unsigned char GET_i[] =
-"GET / HTTP/1.1\r\n"
-"Host: domo.hypno:2333\r\n"
-"Connection: keep-alive\r\n"
-"User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36 OPR/72.0.3815.400\r\n"
-"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\n"
-"Accept-Encoding: gzip, deflate\r\n"
-"Accept-Language: en-US,en;q=0.9"
-"\r\n\r\n";
-
-//Test unsupported methods
-const unsigned char UNSUP_a[] = 
-"NOTHING /path/of/prot?abcdef=wopdawg&hella_awesome=1&aa=bb HTTP/1.1\r\n"
-"Host: domo.hypno:2333\r\n"
-"Connection: keep-alive"
-"\r\n\r\n";
-
-const unsigned char UNSUP_b[] = 
-"delete /path/of/prot?abcdef=wopdawg&hella_awesome=1 HTTP/1.1\r\n"
-"Host: domo.hypno:2333\r\n"
-"Connection: keep-alive"
-"\r\n\r\n";
-
-const unsigned char UNSUP_c[] = 
-"DEL /path/of/prot?abcdef=wopdawg&hella_awesome=1 HTTP/1.1\r\n"
-"Host: domo.hypno:2333\r\n"
-"Connection: keep-alive"
-"\r\n\r\n";
-
-//Test a bunch of application/x-www... requests...
 const unsigned char POST_a[] =
  "POST /chinchinchinny/washhouse/2011-01-20/index?get=html&version=12 HTTP/1.1\r\n"
  "Content-Type"     ": application/x-www-form-urlencoded\r\n"
@@ -238,82 +155,3 @@ const unsigned char POST_c[] = {
  0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x32, 0x35, 0x38, 0x62, 0x39, 0x33, 0x61, 0x62, 0x34,
  0x33, 0x33, 0x65, 0x34, 0x37, 0x34, 0x63, 0x2d, 0x2d, 0x0d, 0x0a
 };
-#endif
-
-
-//...
-typedef struct TestCase {
-	const char *name;
-	const unsigned char *content;
-	int len;
-} TestCase;
-
-
-TestCase cases[] = {
-#if 1
-	TESTCASE(GET_a),
-	TESTCASE(GET_b),
-	TESTCASE(GET_c),
-	TESTCASE(GET_d),
-	TESTCASE(GET_e),
-#endif
-	//TESTCASE(GET_f),
-#if 1
-	TESTCASE(GET_g),
-	TESTCASE(GET_h),
-	TESTCASE(GET_i),
-	TESTCASE(UNSUP_a),
-	TESTCASE(UNSUP_b),
-	TESTCASE(POST_a),
-	TESTCASE(POST_b),
-	TESTCASE(POST_c),
-#endif
-	{ NULL }
-};
-
-#if 0
-TestCase cases[] = {
-	{ GET_a, sizeof( GET_a ) },
-	{ GET_b, sizeof( GET_b ) },
-	{ GET_c, sizeof( GET_c ) },
-	{ GET_d, sizeof( GET_d ) },
-	{ GET_e, sizeof( GET_e ) },
-	{ GET_f, sizeof( GET_f ) },
-	{ GET_g, sizeof( GET_g ) },
-	{ GET_h, sizeof( GET_h ) },
-	{ GET_i, sizeof( GET_i ) },
-	{ UNSUP_a, sizeof( UNSUP_a ) },
-	{ UNSUP_b, sizeof( UNSUP_b ) },
-	{ POST_a, sizeof( POST_a ) },
-	{ POST_b, sizeof( POST_b ) },
-	{ POST_c, sizeof( POST_c ) },
-	{ NULL }
-};
-#endif
-
-int main ( int argc, char *argv[] ) {
-	//Just loop and serialize...
-	TestCase *cc = cases;
-	while ( cc->content ) {
-		char err[ 2048 ] = {0};
-		struct HTTPBody tmp = {0};
-		fprintf( stderr, "\nREQUEST %s\n=========\n", cc->name );
-		//write( 2, cc->content, cc->len );
-
-		//This is how this would run normally
-		tmp.mlen = cc->len; 
-		tmp.msg = malloc( cc->len );
-		memcpy( tmp.msg, cc->content, cc->len ); 
-
-		//Finally, parse the request
-		http_parse_request( &tmp, err, sizeof( err ) );
-		if ( tmp.error == ZHTTP_NONE ) 
-			print_httpbody( &tmp );
-		else {
-			fprintf( stderr, "%s\n", err );	
-		}
-		http_free_body( &tmp );
-		cc++;
-	}	
-	return 0;
-}

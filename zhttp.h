@@ -174,7 +174,7 @@ struct HTTPRecord {
 	const char *disposition;
 	const char *filename;
 	const char *ctype;
-	unsigned char *data;
+	unsigned char *extra;
 #else
 	union {
 		unsigned char *uchars; 

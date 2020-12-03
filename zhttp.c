@@ -426,12 +426,12 @@ static int parse_body( struct HTTPBody *entity, char *err, int errlen ) {
 		while ( ( pp = memblkat( p, bd, len1, bdlen ) ) > -1 ) {
 			int len2 = pp, inner = 0, count = 0;
 			unsigned char *i = p;
-			struct HTTPRecord *b = init_record();
-			b->type = ZHTTP_MULTIPART;
 		#if 0 
 			fprintf( stderr, "START POINT======== len: %d \n", len2 ); write( 2, i, len2 );  getchar();
 		#endif
 			if ( len2 > 0 ) {	
+				struct HTTPRecord *b = init_record();
+				b->type = ZHTTP_MULTIPART;
 				i += bdlen + 1, len2 -= bdlen - 1;
 				//char *name, *filename, *ctype;
 
@@ -453,7 +453,6 @@ static int parse_body( struct HTTPBody *entity, char *err, int errlen ) {
 						if ( memblkat( i, "filename=", inner, 9 ) > -1 ) {
 							b->filename = zhttp_msg_get_value( "filename=\"", "\"", i, inner - 1 );
 						}
-						//b->field = name;
 					}
 					++inner, len2 -= inner, i += inner, count++;
 				}
@@ -480,6 +479,7 @@ static int parse_http_header ( struct HTTPBody *entity, char *err, int errlen ) 
 	//Define stuffs
 	const char *methods = "HEAD,GET,POST,PUT,PATCH,DELETE";
 	const char *protocols = "HTTP/1.1,HTTP/1.0,HTTP/1,HTTP/0.9";
+	int walker = 0;
 	zWalker z = {0};
 
 	//Set pointers to zero?
@@ -504,9 +504,11 @@ static int parse_http_header ( struct HTTPBody *entity, char *err, int errlen ) 
 			return set_http_error( entity, ZHTTP_MALFORMED_FIRSTLINE );
 		}	
 
-		*ptr = malloc( z.size );
-		memset( *ptr, 0, z.size );
-		memcpy( *ptr, &entity->msg[ z.pos ], z.size - 1 ); 
+		if ( walker++ < 3 ) {  
+			*ptr = malloc( z.size );
+			memset( *ptr, 0, z.size );
+			memcpy( *ptr, &entity->msg[ z.pos ], z.size - 1 ); 
+		}
 	}
 
 	//Return null if method, path or version are not present
@@ -555,6 +557,7 @@ static int parse_http_header ( struct HTTPBody *entity, char *err, int errlen ) 
 		entity->clen = clen;
 		entity->ctype = zhttp_msg_get_value( "Content-Type: ", ";\r", entity->msg, entity->hlen );
 		entity->boundary = zhttp_msg_get_value( "boundary=", "\r", entity->msg, entity->hlen );
+		free( clenbuf );
 	}
 	return 1;	
 }
@@ -911,6 +914,9 @@ void http_free_records( struct HTTPRecord **records ) {
 	struct HTTPRecord **r = records;
 	while ( r && *r ) {
 		(*r)->field ? free( (void *)(*r)->field ) : 0;
+		(*r)->disposition ? free( (void *)(*r)->disposition ) : 0;
+		(*r)->filename ? free( (void *)(*r)->filename ) : 0;
+		(*r)->ctype ? free( (void *)(*r)->ctype ) : 0;
 		free( *r );
 		r++;
 	}
@@ -921,9 +927,10 @@ void http_free_records( struct HTTPRecord **records ) {
 void http_free_body ( struct HTTPBody *entity ) {
 	//Free all of the header info
 	entity->path ? free( entity->path ) : 0;
+	entity->ctype ? free( entity->ctype ) : 0;
+	entity->host ? free( entity->host ) : 0;
 	entity->method ? free( entity->method ) : 0;
 	entity->protocol ? free( entity->protocol ) : 0;
-	entity->host ? free( entity->host ) : 0;
 	entity->boundary ? free( entity->boundary ) : 0;
 
 	http_free_records( entity->headers );
@@ -1012,6 +1019,11 @@ void print_httpbody ( struct HTTPBody *r ) {
 				ZHTTP_WRITE( "' -> '", 6 );
 				ZHTTP_WRITE( (*w)->value, (*w)->size );
 				ZHTTP_WRITE( "'\n", 2 );
+				if ( (*w)->type == ZHTTP_MULTIPART ) {
+					ZHTTP_PRINTF( "  Content-Type: %s\n", (*w)->ctype );
+					ZHTTP_PRINTF( "  Filename: %s\n", (*w)->filename );
+					ZHTTP_PRINTF( "  Content-Disposition: %s\n", (*w)->disposition );
+				}
 				w++;
 			}
 		}
