@@ -914,9 +914,11 @@ void http_free_records( struct HTTPRecord **records ) {
 	struct HTTPRecord **r = records;
 	while ( r && *r ) {
 		(*r)->field ? free( (void *)(*r)->field ) : 0;
-		(*r)->disposition ? free( (void *)(*r)->disposition ) : 0;
-		(*r)->filename ? free( (void *)(*r)->filename ) : 0;
-		(*r)->ctype ? free( (void *)(*r)->ctype ) : 0;
+		if ( (*r)->type == ZHTTP_MULTIPART ) { 
+			(*r)->disposition ? free( (void *)(*r)->disposition ) : 0;
+			(*r)->filename ? free( (void *)(*r)->filename ) : 0;
+			(*r)->ctype ? free( (void *)(*r)->ctype ) : 0;
+		}
 		free( *r );
 		r++;
 	}

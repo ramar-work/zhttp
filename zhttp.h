@@ -37,7 +37,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
-#include "vendor/zwalker.h"
+#include "zwalker.h"
 
 #ifdef DEBUG_H
  #include <stdio.h>
@@ -160,7 +160,7 @@ typedef enum {
 
 
 typedef enum {
-	ZHTTP_URL_ENCODED
+	ZHTTP_URL_ENCODED = 0
 , ZHTTP_MULTIPART
 } HttpContentType;
 
