@@ -864,7 +864,6 @@ char * http_set_char( char **k, const char *v ) {
 
 //...
 void * http_set_record( struct HTTPBody *entity, struct HTTPRecord ***list, int type, const char *k, unsigned char *v, int vlen ) {
-ZHTTP_PRINTF( "HTTP BODY: %p %d\n", v, vlen ); 
 	int len = 0;
 	struct HTTPRecord *r = NULL;
 
@@ -900,7 +899,6 @@ ZHTTP_PRINTF( "HTTP BODY: %p %d\n", v, vlen );
 
 	memset( r->value, 0, vlen );
 	memcpy( r->value, v, vlen );
-ZHTTP_PRINTF( "HTTP BODY ptr: %p, size: %d\n", r->value, r->size );
 
 	zhttp_add_item( list, r, struct HTTPRecord *, &len );
 	//entity->size = vlen;
@@ -913,6 +911,7 @@ ZHTTP_PRINTF( "HTTP BODY ptr: %p, size: %d\n", r->value, r->size );
 void http_free_records( struct HTTPRecord **records ) {
 	struct HTTPRecord **r = records;
 	while ( r && *r ) {
+		( *(*r)->field == '.' ) ? free( (*r)->value ) : 0;
 		(*r)->field ? free( (void *)(*r)->field ) : 0;
 		if ( (*r)->type == ZHTTP_MULTIPART ) { 
 			(*r)->disposition ? free( (void *)(*r)->disposition ) : 0;
