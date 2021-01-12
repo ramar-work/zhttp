@@ -37,7 +37,7 @@
  * 12-02-20 - Fixed an off-by-one bug in memblk* functions.
  * 
  * ------------------------------------------- */
-#include "zwalker.h"
+#include <zwalker.h>
 
 //Return count of occurences of a character in some block.
 int memchrocc (const void *a, const char b, int size) {

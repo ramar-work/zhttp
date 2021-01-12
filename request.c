@@ -1,7 +1,7 @@
 /* ------------------------------------------- * 
- * main.c
+ * request.c
  * ---------
- * Tests for C-based HTTP parser, request and response builder 
+ * Tests for C-based HTTP parser & request builder
  *
  * Usage
  * -----

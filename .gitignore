@@ -1,4 +1,5 @@
 src.vim
-file
-zhttp-test
+*-test
 http-test-data.c
+*.o
+TODO
