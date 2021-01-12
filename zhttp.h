@@ -85,7 +85,7 @@
 	http_set_record( ENTITY, &(ENTITY)->body, 1, ".", VAL, VLEN, 1 )
 
 #define http_copy_content(ENTITY,VAL,VLEN) \
-	http_set_record( ENTITY, &(ENTITY)->body, 1, ".", zhttp_dupblk(VAL, VLEN), VLEN, 1 )
+	http_set_record( ENTITY, &(ENTITY)->body, 1, ".", zhttp_dupblk((unsigned char *)VAL, VLEN), VLEN, 1 )
 
 #define http_copy_tcontent(ENTITY,VAL) \
 	http_set_record( ENTITY, &(ENTITY)->body, 1, ".", zhttp_dupstr(VAL), strlen(VAL), 1 )

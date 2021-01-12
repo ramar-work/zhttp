@@ -797,7 +797,7 @@ struct HTTPBody * http_finalize_response ( struct HTTPBody *entity, char *err, i
 	}
 
 	//ZHTTP_PRINTF( "HTTP BODY ptr: %p, size: %d\n", (*entity->body)->value, (*entity->body)->size ); 
-	if ( (*entity->body) && ( !(*entity->body)->value || !(*entity->body)->size ) ) {
+	if ( body && *body && ( !(*body)->value || !(*body)->size ) ) {
 		snprintf( err, errlen, "%s", "No body length specified with response." );
 		return NULL;
 	}
