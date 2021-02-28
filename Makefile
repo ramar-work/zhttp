@@ -18,6 +18,12 @@ main: request
 main: response
 	@printf '' > /dev/null
 
+install:
+	cp $(NAME).[ch] /usr/local/include/
+
+uninstall:
+	echo rm -f /usr/local/include/$(NAME).[ch] 
+
 debug: CFLAGS += $(DFLAGS)
 debug: main 
 	@printf '' > /dev/null
