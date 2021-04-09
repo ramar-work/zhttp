@@ -99,7 +99,7 @@ int main ( int argc, char *argv[] ) {
 	int r = 0;
 
 	while ( cc->content ) {
-		unsigned char *v = NULL, err[ 2048 ] = {0};
+		unsigned char err[ 2048 ] = {0};
 		zhttp_t tmp = {0};
 		fprintf( stderr, "\nRESPONSE %d\n=========\n", r++ );
 

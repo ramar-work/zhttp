@@ -110,12 +110,6 @@ static const char *http_status[] = {
 };
 
 
-
-static const char *errors[] = {
-	
-};
-
-
 //Set http errors
 static int set_http_error( zhttp_t *entity, HTTP_Error code ) {
 	entity->error = code;
@@ -123,10 +117,17 @@ static int set_http_error( zhttp_t *entity, HTTP_Error code ) {
 }
 
 
+#if 0
+static const char *errors[] = {
+	
+};
+
+//Set fatal errors
 static int set_fatal_error( zhttp_t *entity, HTTP_Error code ) {
 	entity->error = code;
 	return 0; //Always return false
 }
+#endif
 
 
 //Copy a string from unsigned data
@@ -307,7 +308,6 @@ static int parse_url( zhttp_t *entity, char *err, int errlen ) {
 	int l = 0, len = 0;
 	struct HTTPRecord *b; 
 	zWalker set = {0};
-	char *p;
 
 	if ( ( l = strlen( entity->path )) == 1 || !memchr( entity->path, '?', l ) ) {
 		entity->url = NULL;
@@ -380,8 +380,6 @@ static int parse_body( zhttp_t *entity, char *err, int errlen ) {
 	memset( &set, 0, sizeof( zWalker ) );
 	int len = 0;
 	unsigned char *p = &entity->msg[ entity->hlen + 4 ];
-	int plen = entity->mlen - entity->hlen;
-	const char *methods = "application/x-www-form-urlencoded,multipart/form-data";
 	const char *idem = "POST,PUT,PATCH";
 	const char *multipart = "multipart/form-data";
 
@@ -604,9 +602,6 @@ zhttp_t * http_parse_request ( zhttp_t *entity, char *err, int errlen ) {
 //Parse an HTTP response
 zhttp_t * http_parse_response ( zhttp_t *entity, char *err, int errlen ) {
 	//Prepare the rest of the request
-	char *header = (char *)entity->msg;
-	int pLen = memchrat( entity->msg, '\n', entity->mlen ) - 1;
-	const int flLen = pLen + strlen( "\r\n" );
 	int hdLen = memstrat( entity->msg, "\r\n\r\n", entity->mlen );
 
 	//Initialize the remainder of variables 
@@ -621,16 +616,11 @@ zhttp_t * http_parse_response ( zhttp_t *entity, char *err, int errlen ) {
 //Finalize an HTTP request (really just returns a unsigned char, but this can handle it)
 zhttp_t * http_finalize_request ( zhttp_t *entity, char *err, int errlen ) {
 	unsigned char *msg = NULL, *hmsg = NULL;
-	int msglen = 0, hmsglen = 0, http_header_len = 0;
+	int msglen = 0, hmsglen = 0;
 	int multipart = 0;
 	struct HTTPRecord **headers = entity->headers;
 	struct HTTPRecord **body = entity->body;
-	char http_header_buf[ 2048 ] = { 0 };
-	char http_header_fmt[] = "%s %s %s\r\n";
 	char clen[ 32 ] = {0};
-	const char http_host_header_str[] = "Host: %s";
-	const char http_content_length_header_str[] = "Content-Length: %d";
-	const char http_content_type_header_str[] = "Content-Type: %s";
 
 	if ( entity->boundary )
 		free( entity->boundary );
@@ -700,7 +690,6 @@ zhttp_t * http_finalize_request ( zhttp_t *entity, char *err, int errlen ) {
 			static const char cdisph[] = "Content-Disposition: " ;
 			static const char cdispt[] = "form-data;" ;
 			static const char nameh[] = "name=";
-			static const char filename[] = "filename=";
 
 			while ( body && *body ) {
 				struct HTTPRecord *r = *body;

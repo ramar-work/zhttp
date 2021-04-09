@@ -4,13 +4,13 @@ OS = $(shell uname | sed 's/[_ ].*//')
 LDFLAGS =
 IFLAGS = -I. -Ivendor/
 CLANGFLAGS = -g -O0 -Wall -Werror -std=c99 -Wno-unused -Wno-format-security
-#GCCFLAGS = -g -Wall -Werror -std=c99 #-Wno-unused -Wstrict-overflow -Wno-strict-aliasing -Wno-format-truncation -Wno-strict-overflow
+GCCFLAGS = -g -Wall -Werror -std=c99 #-Wno-unused -Wstrict-overflow -Wno-strict-aliasing -Wno-format-truncation -Wno-strict-overflow
 DFLAGS = -fsanitize=address -fsanitize-undefined-trap-on-error -DDEBUG_H
 #DEBUGFLAGS = -DDEBUG_H
 CFLAGS = $(IFLAGS) $(CLANGFLAGS)
-#CFLAGS = $(IFLAGS) $(GCCFLAGS)
+CFLAGS = $(IFLAGS) $(GCCFLAGS)
 CC = clang
-#CC = gcc
+CC = gcc
 PREFIX = /usr/local
 VERSION = 0.01
 
