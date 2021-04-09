@@ -100,7 +100,7 @@ int main ( int argc, char *argv[] ) {
 
 	while ( cc->content ) {
 		unsigned char *v = NULL, err[ 2048 ] = {0};
-		struct HTTPBody tmp = {0};
+		zhttp_t tmp = {0};
 		fprintf( stderr, "\nRESPONSE %d\n=========\n", r++ );
 
 		//Typical setup (these should NEVER fail)

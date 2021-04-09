@@ -49,7 +49,7 @@ struct HTTPRecord xheaders[] = {
 };
 
 /*responses*/
-struct HTTPBody response_missing_body = {
+zhttp_t response_missing_body = {
 	.clen = 12,
 	.mlen = 16,
 	.hlen = 16,
@@ -59,7 +59,7 @@ struct HTTPBody response_missing_body = {
 	.protocol = "HTTP/1.1",
 };
 
-struct HTTPBody response_small_body = {
+zhttp_t response_small_body = {
 	.status = 200,
 	.ctype = "text/html",
 	.protocol = "HTTP/1.1",
@@ -67,21 +67,21 @@ struct HTTPBody response_small_body = {
 	.headers = NULL
 };
 
-struct HTTPBody response_small_body_missing_params_1 = {
+zhttp_t response_small_body_missing_params_1 = {
 	.status = 200,
 	.ctype = "image/jpeg",
 	.protocol = "HTTP/1.1",
 	.body = (struct HTTPRecord **)text_body_no_body
 };
 
-struct HTTPBody response_small_body_missing_params_2 = {
+zhttp_t response_small_body_missing_params_2 = {
 	.status = 200,
 	.ctype = "image/jpeg",
 	.protocol = "HTTP/1.1",
 	.body = (struct HTTPRecord **)text_body_no_len
 };
 
-struct HTTPBody response_small_body_with_headers = {
+zhttp_t response_small_body_with_headers = {
 	.status = 200,
 	.ctype = "text/html",
 	.protocol = "HTTP/1.1",
@@ -89,7 +89,7 @@ struct HTTPBody response_small_body_with_headers = {
 	.body = (struct HTTPRecord **)&text_body,
 };
 
-struct HTTPBody response_with_error_not_found = {
+zhttp_t response_with_error_not_found = {
 	.status = 404,
 	.ctype = "text/html",
 	.protocol = "HTTP/1.1",
@@ -98,7 +98,7 @@ struct HTTPBody response_with_error_not_found = {
 	}
 };
 
-struct HTTPBody response_with_error_internal_server_error = {
+zhttp_t response_with_error_internal_server_error = {
 	.status = 500,
 	.ctype = "text/html",
 	.protocol = "HTTP/1.1",
@@ -107,7 +107,7 @@ struct HTTPBody response_with_error_internal_server_error = {
 	}
 };
 
-struct HTTPBody response_with_invalid_error_code = {
+zhttp_t response_with_invalid_error_code = {
 	.status = 909,
 	.ctype = "text/html",
 	.protocol = "HTTP/1.1",
@@ -116,7 +116,7 @@ struct HTTPBody response_with_invalid_error_code = {
 	}
 };
 
-struct HTTPBody response_binary_body = {
+zhttp_t response_binary_body = {
 	.status = 200,
 	.ctype = "image/jpeg",
 	.protocol = "HTTP/1.1",
@@ -124,27 +124,27 @@ struct HTTPBody response_binary_body = {
 };
 
 /*requests*/
-struct HTTPBody request_head = {
+zhttp_t request_head = {
 	.protocol = "HTTP/1.1",
 	.method = "HEAD",
 	.path = "/juice",
 	.ctype = "text/html"
 };
 
-struct HTTPBody request_text_html_no_path = {
+zhttp_t request_text_html_no_path = {
 	.protocol = "HTTP/1.1",
 	.method = "GET",
 	.ctype = "text/html"
 };
 
-struct HTTPBody request_text_html = {
+zhttp_t request_text_html = {
 	.protocol = "HTTP/1.1",
 	.method = "GET",
 	.path = "/",
 	.ctype = "text/html"
 };
 
-struct HTTPBody request_application_x_www_url_formencoded_no_headers = {
+zhttp_t request_application_x_www_url_formencoded_no_headers = {
 	.protocol = "HTTP/1.1",
 	.method = "POST",
 	.path = "/",
@@ -152,7 +152,7 @@ struct HTTPBody request_application_x_www_url_formencoded_no_headers = {
 	.body = bodies
 };
 
-struct HTTPBody request_application_x_www_url_formencoded = {
+zhttp_t request_application_x_www_url_formencoded = {
 	.protocol = "HTTP/1.1",
 	.method = "POST",
 	.path = "/useless-post",
@@ -161,14 +161,14 @@ struct HTTPBody request_application_x_www_url_formencoded = {
 	.body = bodies
 };
 
-struct HTTPBody request_multipart_text_no_content = { 
+zhttp_t request_multipart_text_no_content = { 
 	.protocol = "HTTP/1.1",
 	.method = "POST",
 	.path = "/post",
 	.ctype = "text/html"
 };
 
-struct HTTPBody request_multipart_text = { 
+zhttp_t request_multipart_text = { 
 	.protocol = "HTTP/1.1",
 	.method = "POST",
 	.ctype = "multipart/form-data",
@@ -177,7 +177,7 @@ struct HTTPBody request_multipart_text = {
 	.body = bodies
 };
 
-struct HTTPBody request_multipart_binary = { 
+zhttp_t request_multipart_binary = { 
 	.protocol = "HTTP/1.1",
 	.method = "POST",
 	.ctype = "multipart/form-data",
@@ -339,70 +339,70 @@ const uint8_t image_jpeg_body[] =
 ;
 
 
-struct HTTPBody head_body_result ={
+zhttp_t head_body_result ={
 };
-struct HTTPBody head_body_missing_protocol_result ={
+zhttp_t head_body_missing_protocol_result ={
 };
-struct HTTPBody get_body_missing_path_result ={
+zhttp_t get_body_missing_path_result ={
 };
-struct HTTPBody get_body_missing_headers_result ={
+zhttp_t get_body_missing_headers_result ={
 };
-struct HTTPBody get_body_extra_long_path_result ={
+zhttp_t get_body_extra_long_path_result ={
 };
-struct HTTPBody get_body_1_result ={
+zhttp_t get_body_1_result ={
 };
-struct HTTPBody get_body_2_result ={
+zhttp_t get_body_2_result ={
 };
-struct HTTPBody get_body_3_result ={
+zhttp_t get_body_3_result ={
 };
-struct HTTPBody get_body_4_result ={
+zhttp_t get_body_4_result ={
 };
-struct HTTPBody get_body_5_result ={
+zhttp_t get_body_5_result ={
 };
-struct HTTPBody get_body_6_result ={
+zhttp_t get_body_6_result ={
 };
-struct HTTPBody post_body_1_result ={
+zhttp_t post_body_1_result ={
 };
-struct HTTPBody put_body_result ={
+zhttp_t put_body_result ={
 };
-struct HTTPBody text_html_body_result ={
+zhttp_t text_html_body_result ={
 };
-struct HTTPBody text_plain_body_result ={
+zhttp_t text_plain_body_result ={
 };
-struct HTTPBody zero_length_body_result ={
+zhttp_t zero_length_body_result ={
 };
-struct HTTPBody statusless_body_result ={
+zhttp_t statusless_body_result ={
 };
-struct HTTPBody eww_body_result ={
+zhttp_t eww_body_result ={
 };
-struct HTTPBody headerless_body_result ={
+zhttp_t headerless_body_result ={
 };
-struct HTTPBody missing_host_body_result ={
+zhttp_t missing_host_body_result ={
 };
-struct HTTPBody missing_content_length_body_result ={
+zhttp_t missing_content_length_body_result ={
 };
-struct HTTPBody multipart_text_body_result ={
+zhttp_t multipart_text_body_result ={
 };
-struct HTTPBody image_jpeg_body_result ={
+zhttp_t image_jpeg_body_result ={
 };
 
 #endif
 
-struct HTTPBody *requests_received[] = {
-	&(struct HTTPBody){ .msg = (uint8_t *)head_body,  .mlen = sizeof( head_body ) },
-	&(struct HTTPBody){ .msg = (uint8_t *)get_body_1, .mlen = sizeof( get_body_1 ) },
-	&(struct HTTPBody){ .msg = (uint8_t *)get_body_2, .mlen = sizeof( get_body_2 ) },
-	&(struct HTTPBody){ .msg = (uint8_t *)get_body_3, .mlen = sizeof( get_body_3 ) },
-	&(struct HTTPBody){ .msg = (uint8_t *)get_body_4, .mlen = sizeof( get_body_4 ) },
-	&(struct HTTPBody){ .msg = (uint8_t *)get_body_5, .mlen = sizeof( get_body_5 ) },
-	&(struct HTTPBody){ .msg = (uint8_t *)get_body_6, .mlen = sizeof( get_body_6 ) },
-	&(struct HTTPBody){ .msg = (uint8_t *)post_body_1,.mlen = sizeof( post_body_1 ) },
-	&(struct HTTPBody){ .msg = (uint8_t []){ POST_BODY },.mlen = POST_BODY_LEN },
-	&(struct HTTPBody){ .msg = (uint8_t *)put_body,   .mlen = sizeof( put_body ) },
+zhttp_t *requests_received[] = {
+	&(zhttp_t){ .msg = (uint8_t *)head_body,  .mlen = sizeof( head_body ) },
+	&(zhttp_t){ .msg = (uint8_t *)get_body_1, .mlen = sizeof( get_body_1 ) },
+	&(zhttp_t){ .msg = (uint8_t *)get_body_2, .mlen = sizeof( get_body_2 ) },
+	&(zhttp_t){ .msg = (uint8_t *)get_body_3, .mlen = sizeof( get_body_3 ) },
+	&(zhttp_t){ .msg = (uint8_t *)get_body_4, .mlen = sizeof( get_body_4 ) },
+	&(zhttp_t){ .msg = (uint8_t *)get_body_5, .mlen = sizeof( get_body_5 ) },
+	&(zhttp_t){ .msg = (uint8_t *)get_body_6, .mlen = sizeof( get_body_6 ) },
+	&(zhttp_t){ .msg = (uint8_t *)post_body_1,.mlen = sizeof( post_body_1 ) },
+	&(zhttp_t){ .msg = (uint8_t []){ POST_BODY },.mlen = POST_BODY_LEN },
+	&(zhttp_t){ .msg = (uint8_t *)put_body,   .mlen = sizeof( put_body ) },
 	NULL
 };
 
-struct HTTPBody *requests_to_send[] = {
+zhttp_t *requests_to_send[] = {
 #if 0
 	&request_head,	
 	&request_text_html_no_path,	
@@ -418,18 +418,18 @@ struct HTTPBody *requests_to_send[] = {
 	NULL
 };
 
-struct HTTPBody *responses_received[] = {
-	&(struct HTTPBody){ .msg = (uint8_t *)text_html_body, .mlen = sizeof( text_html_body ) },
-	&(struct HTTPBody){ .msg = (uint8_t *)image_jpeg_body, .mlen = sizeof( image_jpeg_body ) },
-	&(struct HTTPBody){ .msg = (uint8_t *)text_plain_body, .mlen = sizeof( text_plain_body ) },
-	&(struct HTTPBody){ .msg = (uint8_t *)zero_length_body, .mlen = sizeof( zero_length_body ) },
-	&(struct HTTPBody){ .msg = (uint8_t *)headerless_body, .mlen = sizeof( headerless_body ) },
-	&(struct HTTPBody){ .msg = (uint8_t *)missing_host_body, .mlen = sizeof( missing_host_body ) },
-	&(struct HTTPBody){ .msg = (uint8_t *)missing_content_length_body, .mlen = sizeof( missing_content_length_body ) },
+zhttp_t *responses_received[] = {
+	&(zhttp_t){ .msg = (uint8_t *)text_html_body, .mlen = sizeof( text_html_body ) },
+	&(zhttp_t){ .msg = (uint8_t *)image_jpeg_body, .mlen = sizeof( image_jpeg_body ) },
+	&(zhttp_t){ .msg = (uint8_t *)text_plain_body, .mlen = sizeof( text_plain_body ) },
+	&(zhttp_t){ .msg = (uint8_t *)zero_length_body, .mlen = sizeof( zero_length_body ) },
+	&(zhttp_t){ .msg = (uint8_t *)headerless_body, .mlen = sizeof( headerless_body ) },
+	&(zhttp_t){ .msg = (uint8_t *)missing_host_body, .mlen = sizeof( missing_host_body ) },
+	&(zhttp_t){ .msg = (uint8_t *)missing_content_length_body, .mlen = sizeof( missing_content_length_body ) },
 	NULL
 };
 
-struct HTTPBody *responses_to_send[] = {
+zhttp_t *responses_to_send[] = {
 	&response_missing_body,
 	&response_small_body,
 	&response_small_body_missing_params_1,
@@ -459,7 +459,7 @@ void print_entity_list ( const char *element, struct HTTPRecord **list ) {
 }
 
 
-void print_entity( struct HTTPBody *entity ) {
+void print_entity( zhttp_t *entity ) {
 	//All of the members should be filled out...
 	fprintf( stderr, "{ " );
 	//fprintf( stderr, "proto: %5s",  entity->protocol );
@@ -494,8 +494,8 @@ void print_entity( struct HTTPBody *entity ) {
 
 //Expected is a string, compared with a string
 int run_this ( void *a, void *b ) {
-	struct HTTPBody that;
-	memset( &that, 0, sizeof( struct HTTPBody ) ); 
+	zhttp_t that;
+	memset( &that, 0, sizeof( zhttp_t ) ); 
 	char *hostname = "bob.net";	
 	int stat = 200;
 	char *text = "<h2>Ok</h2>";
@@ -514,8 +514,8 @@ return 0;
 
 //Expected is a string, compared with a string
 int run_else ( void *a, void *b ) {
-	struct HTTPBody *this = NULL;
-	if ( !( this = malloc( sizeof( struct HTTPBody ) ) ) ) {
+	zhttp_t *this = NULL;
+	if ( !( this = malloc( sizeof( zhttp_t ) ) ) ) {
 		fprintf( stderr, "Couldn't initialize this!" );
 		return 0;
 	}
@@ -560,10 +560,10 @@ int main ( int argc, char *argv[] ) {
 	//Part 2: Test creating responses & requests from assembled data
 	struct test { 
 		const char *name;
-		struct HTTPBody **list; 
-		struct HTTPBody * (*transform)( struct HTTPBody *, char *, int );
-		void (*print)( struct HTTPBody * );
-		void (*free)( struct HTTPBody * );
+		zhttp_t **list; 
+		zhttp_t * (*transform)( zhttp_t *, char *, int );
+		void (*print)( zhttp_t * );
+		void (*free)( zhttp_t * );
 	} tests[] = {
 		{ "REQUESTS - PARSE", requests_received, http_parse_request, print_entity, http_free_body },
 		//{ "REQUESTS - PACK",  requests_to_send,  http_finalize_request, print_test_request, NULL },
@@ -577,7 +577,7 @@ int main ( int argc, char *argv[] ) {
 	//TODO: This wants to be a loop so bad...
 	//This will have to check certain fields in the HTTPBody structure
 	for ( int i = 0; i < sizeof(tests)/sizeof(struct test); i++ ) {
-		struct HTTPBody **r = tests[i].list;
+		zhttp_t **r = tests[i].list;
 		fprintf( stderr, "%s\n===================\n", tests[i].name );
 		while ( *r ) {
 			memset( err, 0, sizeof(err) );	

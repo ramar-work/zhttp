@@ -206,7 +206,7 @@ struct HTTPRecord {
 };
 
 
-struct HTTPBody {
+typedef struct HTTPBody {
 	char *path;
 	char *ctype; 
 	char *host;
@@ -223,35 +223,35 @@ struct HTTPBody {
 	struct HTTPRecord **url;
 	struct HTTPRecord **body;
 	//int rstatus;  //HEADER_PARSED, URL_PARSED, ...
-};
+} zhttp_t;
 
 unsigned char *httpvtrim (unsigned char *, int , int *) ;
 
 unsigned char *httptrim (unsigned char *, const char *, int , int *) ;
 
-void http_free_body( struct HTTPBody * );
+void http_free_body( zhttp_t * );
 
-struct HTTPBody * http_finalize_response (struct HTTPBody *, char *, int );
+zhttp_t * http_finalize_response (zhttp_t *, char *, int );
 
-struct HTTPBody * http_finalize_request (struct HTTPBody *, char *, int );
+zhttp_t * http_finalize_request (zhttp_t *, char *, int );
 
-struct HTTPBody * http_parse_request (struct HTTPBody *, char *, int );
+zhttp_t * http_parse_request (zhttp_t *, char *, int );
 
-struct HTTPBody * http_parse_response (struct HTTPBody *, char *, int );
+zhttp_t * http_parse_response (zhttp_t *, char *, int );
 
 int http_set_int( int *, int );
 
 char *http_set_char( char **, const char * );
 
-void *http_set_record( struct HTTPBody *, struct HTTPRecord ***, int, const char *, unsigned char *, int, int );
+void *http_set_record( zhttp_t *, struct HTTPRecord ***, int, const char *, unsigned char *, int, int );
 
-int http_set_error ( struct HTTPBody *entity, int status, char *message );
+int http_set_error ( zhttp_t *entity, int status, char *message );
 
 unsigned char * zhttp_dupblk( const unsigned char *v, int vlen ) ;
 
 #ifdef DEBUG_H
  void print_httprecords ( struct HTTPRecord ** );
- void print_httpbody ( struct HTTPBody * );
+ void print_httpbody ( zhttp_t * );
 #else
  #define print_httprecords(...)
  #define print_httpbody(...)

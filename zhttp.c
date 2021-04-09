@@ -117,13 +117,13 @@ static const char *errors[] = {
 
 
 //Set http errors
-static int set_http_error( struct HTTPBody *entity, HTTP_Error code ) {
+static int set_http_error( zhttp_t *entity, HTTP_Error code ) {
 	entity->error = code;
 	return 0; //Always return false
 }
 
 
-static int set_fatal_error( struct HTTPBody *entity, HTTP_Error code ) {
+static int set_fatal_error( zhttp_t *entity, HTTP_Error code ) {
 	entity->error = code;
 	return 0; //Always return false
 }
@@ -303,7 +303,7 @@ static struct HTTPRecord * init_record() {
 
 
 //Parse out the URL (or path requested) of an HTTP request 
-static int parse_url( struct HTTPBody *entity, char *err, int errlen ) {
+static int parse_url( zhttp_t *entity, char *err, int errlen ) {
 	int l = 0, len = 0;
 	struct HTTPRecord *b; 
 	zWalker set = {0};
@@ -338,7 +338,7 @@ static int parse_url( struct HTTPBody *entity, char *err, int errlen ) {
 
 
 //Parse out the headers of an HTTP body
-static int parse_headers( struct HTTPBody *entity, char *err, int errlen ) {
+static int parse_headers( zhttp_t *entity, char *err, int errlen ) {
 	zWalker set = {0};
 	int len = 0;
 	int flen = strlen( entity->path ) 
@@ -374,7 +374,7 @@ static int parse_headers( struct HTTPBody *entity, char *err, int errlen ) {
 
 
 //Parse out the parts of an HTTP body
-static int parse_body( struct HTTPBody *entity, char *err, int errlen ) {
+static int parse_body( zhttp_t *entity, char *err, int errlen ) {
 	//Always process the body 
 	zWalker set;
 	memset( &set, 0, sizeof( zWalker ) );
@@ -480,7 +480,7 @@ static int parse_body( struct HTTPBody *entity, char *err, int errlen ) {
 
 
 //Marks the important parts of an HTTP request
-static int parse_http_header ( struct HTTPBody *entity, char *err, int errlen ) {
+static int parse_http_header ( zhttp_t *entity, char *err, int errlen ) {
 	//Define stuffs
 	const char *methods = "HEAD,GET,POST,PUT,PATCH,DELETE";
 	const char *protocols = "HTTP/1.1,HTTP/1.0,HTTP/1,HTTP/0.9";
@@ -570,7 +570,7 @@ static int parse_http_header ( struct HTTPBody *entity, char *err, int errlen ) 
 
 
 //Parse an HTTP request
-struct HTTPBody * http_parse_request ( struct HTTPBody *entity, char *err, int errlen ) {
+zhttp_t * http_parse_request ( zhttp_t *entity, char *err, int errlen ) {
 
 	//Set error to none
 	entity->error = ZHTTP_NONE;
@@ -602,7 +602,7 @@ struct HTTPBody * http_parse_request ( struct HTTPBody *entity, char *err, int e
 
 
 //Parse an HTTP response
-struct HTTPBody * http_parse_response ( struct HTTPBody *entity, char *err, int errlen ) {
+zhttp_t * http_parse_response ( zhttp_t *entity, char *err, int errlen ) {
 	//Prepare the rest of the request
 	char *header = (char *)entity->msg;
 	int pLen = memchrat( entity->msg, '\n', entity->mlen ) - 1;
@@ -619,7 +619,7 @@ struct HTTPBody * http_parse_response ( struct HTTPBody *entity, char *err, int 
 
 
 //Finalize an HTTP request (really just returns a unsigned char, but this can handle it)
-struct HTTPBody * http_finalize_request ( struct HTTPBody *entity, char *err, int errlen ) {
+zhttp_t * http_finalize_request ( zhttp_t *entity, char *err, int errlen ) {
 	unsigned char *msg = NULL, *hmsg = NULL;
 	int msglen = 0, hmsglen = 0, http_header_len = 0;
 	int multipart = 0;
@@ -774,7 +774,7 @@ struct HTTPBody * http_finalize_request ( struct HTTPBody *entity, char *err, in
 
 
 //Finalize an HTTP response (really just returns a unsigned char, but this can handle it)
-struct HTTPBody * http_finalize_response ( struct HTTPBody *entity, char *err, int errlen ) {
+zhttp_t * http_finalize_response ( zhttp_t *entity, char *err, int errlen ) {
 	unsigned char *msg = NULL;
 	int msglen = 0;
 	int http_header_len = 0;
@@ -859,7 +859,7 @@ char * http_set_char( char **k, const char *v ) {
 
 //...
 void * http_set_record
- ( struct HTTPBody *entity, struct HTTPRecord ***list, int type, const char *k, unsigned char *v, int vlen, int free ) {
+ ( zhttp_t *entity, struct HTTPRecord ***list, int type, const char *k, unsigned char *v, int vlen, int free ) {
 	int len = 0;
 	struct HTTPRecord *r = NULL;
 
@@ -918,7 +918,7 @@ static void http_free_records( struct HTTPRecord **records ) {
 
 
 //...
-void http_free_body ( struct HTTPBody *entity ) {
+void http_free_body ( zhttp_t *entity ) {
 	//Free all of the header info
 	entity->path ? free( entity->path ) : 0;
 	entity->ctype ? free( entity->ctype ) : 0;
@@ -939,7 +939,7 @@ void http_free_body ( struct HTTPBody *entity ) {
 
 
 //...
-int http_set_error ( struct HTTPBody *entity, int status, char *message ) {
+int http_set_error ( zhttp_t *entity, int status, char *message ) {
 	char err[ 2048 ];
 	memset( err, 0, sizeof( err ) );
 	ZHTTP_PRINTF( "status: %d, mlen: %ld, msg: '%s'\n", status, strlen(message), message );
@@ -988,7 +988,7 @@ void print_httprecords ( struct HTTPRecord **r ) {
 
 
 //list out everything in an HTTPBody
-void print_httpbody ( struct HTTPBody *r ) {
+void print_httpbody ( zhttp_t *r ) {
 	if ( r == NULL ) return;
 	ZHTTP_PRINTF( "r->mlen: '%d'\n", r->mlen );
 	ZHTTP_PRINTF( "r->clen: '%d'\n", r->clen );

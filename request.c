@@ -92,7 +92,7 @@ int main ( int argc, char *argv[] ) {
 	TestCase *cc = cases;
 	while ( cc->content ) {
 		char err[ 2048 ] = {0};
-		struct HTTPBody tmp = {0};
+		zhttp_t tmp = {0};
 		fprintf( stderr, "\nREQUEST %s\n=========\n", cc->name );
 		//write( 2, cc->content, cc->len );
 
