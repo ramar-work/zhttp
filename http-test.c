@@ -4,44 +4,44 @@
 const char default_protocol[] = "HTTP/1.1";
 
 /*data*/
-struct HTTPRecord *text_body[] = { 
-	&(struct HTTPRecord){ NULL, NULL, (uint8_t *)"<h2>Ok</h2>", 11 } 
+zhttpr_t *text_body[] = { 
+	&(zhttpr_t){ NULL, NULL, (uint8_t *)"<h2>Ok</h2>", 11 } 
 };
 
-struct HTTPRecord *uint8_body[] = { 
-	&(struct HTTPRecord){ NULL, NULL, (uint8_t []){ AEON_THUMB }, AEON_THUMB_LEN } 
+zhttpr_t *uint8_body[] = { 
+	&(zhttpr_t){ NULL, NULL, (uint8_t []){ AEON_THUMB }, AEON_THUMB_LEN } 
 };
 
-struct HTTPRecord *text_body_no_body[] = { 
-	&(struct HTTPRecord){ NULL, NULL, NULL, 11 } 
+zhttpr_t *text_body_no_body[] = { 
+	&(zhttpr_t){ NULL, NULL, NULL, 11 } 
 };
 
-struct HTTPRecord *text_body_no_len[] = { 
-	&(struct HTTPRecord){ NULL, NULL, (uint8_t *)"<h2>Ok</h2>" } 
+zhttpr_t *text_body_no_len[] = { 
+	&(zhttpr_t){ NULL, NULL, (uint8_t *)"<h2>Ok</h2>" } 
 };
 
-struct HTTPRecord *headers[] = {
-	&(struct HTTPRecord){ "X-Case-Contact", NULL, (uint8_t *)"Lydia", 5 },
-	&(struct HTTPRecord){ "ETag", NULL, (uint8_t *)"dd323d9asdf", 11 },
-	&(struct HTTPRecord){ "Accept", NULL, (uint8_t *)"*/*", 3 },
-	&(struct HTTPRecord){ NULL }
+zhttpr_t *headers[] = {
+	&(zhttpr_t){ "X-Case-Contact", NULL, (uint8_t *)"Lydia", 5 },
+	&(zhttpr_t){ "ETag", NULL, (uint8_t *)"dd323d9asdf", 11 },
+	&(zhttpr_t){ "Accept", NULL, (uint8_t *)"*/*", 3 },
+	&(zhttpr_t){ NULL }
 };
 
-struct HTTPRecord *bodies[] = {
-	&(struct HTTPRecord){ "field1", "text/html", (uint8_t *)"Lots of text", 12 },
-	&(struct HTTPRecord){ "another_field", "text/plain", (uint8_t *)"dd323d9asdf", 11 },
-	&(struct HTTPRecord){ "gunz", "text/plain", (uint8_t *)"Hello, world!", 13 },
-	&(struct HTTPRecord){ NULL }
+zhttpr_t *bodies[] = {
+	&(zhttpr_t){ "field1", "text/html", (uint8_t *)"Lots of text", 12 },
+	&(zhttpr_t){ "another_field", "text/plain", (uint8_t *)"dd323d9asdf", 11 },
+	&(zhttpr_t){ "gunz", "text/plain", (uint8_t *)"Hello, world!", 13 },
+	&(zhttpr_t){ NULL }
 };
 
-struct HTTPRecord *bodies_bin[] = {
-	&(struct HTTPRecord){ "field1", "text/html", (uint8_t *)"Lots of text", 12 },
-	&(struct HTTPRecord){ "another_field", "text/plain", (uint8_t *)"dd323d9asdf", 11 },
-	&(struct HTTPRecord){ "binary", "image/jpeg", (uint8_t *)aeon_thumb_favicon_jpg, AEON_THUMB_LEN },
-	&(struct HTTPRecord){ NULL }
+zhttpr_t *bodies_bin[] = {
+	&(zhttpr_t){ "field1", "text/html", (uint8_t *)"Lots of text", 12 },
+	&(zhttpr_t){ "another_field", "text/plain", (uint8_t *)"dd323d9asdf", 11 },
+	&(zhttpr_t){ "binary", "image/jpeg", (uint8_t *)aeon_thumb_favicon_jpg, AEON_THUMB_LEN },
+	&(zhttpr_t){ NULL }
 };
 
-struct HTTPRecord xheaders[] = {
+zhttpr_t xheaders[] = {
 	{ "X-Case-Contact", NULL, (uint8_t *)"Lydia", 5 },
 	{ "ETag", NULL, (uint8_t *)"dd323d9asdf", 11 },
 	{ "Accept", NULL, (uint8_t *)"*/*", 3 },
@@ -63,7 +63,7 @@ zhttp_t response_small_body = {
 	.status = 200,
 	.ctype = "text/html",
 	.protocol = "HTTP/1.1",
-	.body = (struct HTTPRecord **)text_body,
+	.body = (zhttpr_t **)text_body,
 	.headers = NULL
 };
 
@@ -71,30 +71,30 @@ zhttp_t response_small_body_missing_params_1 = {
 	.status = 200,
 	.ctype = "image/jpeg",
 	.protocol = "HTTP/1.1",
-	.body = (struct HTTPRecord **)text_body_no_body
+	.body = (zhttpr_t **)text_body_no_body
 };
 
 zhttp_t response_small_body_missing_params_2 = {
 	.status = 200,
 	.ctype = "image/jpeg",
 	.protocol = "HTTP/1.1",
-	.body = (struct HTTPRecord **)text_body_no_len
+	.body = (zhttpr_t **)text_body_no_len
 };
 
 zhttp_t response_small_body_with_headers = {
 	.status = 200,
 	.ctype = "text/html",
 	.protocol = "HTTP/1.1",
-	.headers = (struct HTTPRecord **)&headers,
-	.body = (struct HTTPRecord **)&text_body,
+	.headers = (zhttpr_t **)&headers,
+	.body = (zhttpr_t **)&text_body,
 };
 
 zhttp_t response_with_error_not_found = {
 	.status = 404,
 	.ctype = "text/html",
 	.protocol = "HTTP/1.1",
-	.body = &( struct HTTPRecord * ){
-		&(struct HTTPRecord){ NULL, NULL, (uint8_t *)"<h2>Resource not found</h2>", 28 }
+	.body = &( zhttpr_t * ){
+		&(zhttpr_t){ NULL, NULL, (uint8_t *)"<h2>Resource not found</h2>", 28 }
 	}
 };
 
@@ -102,8 +102,8 @@ zhttp_t response_with_error_internal_server_error = {
 	.status = 500,
 	.ctype = "text/html",
 	.protocol = "HTTP/1.1",
-	.body = &( struct HTTPRecord * ){
-		&(struct HTTPRecord){ NULL, NULL, (uint8_t *)"<h2>Internal Server Error</h2>", 31 }
+	.body = &( zhttpr_t * ){
+		&(zhttpr_t){ NULL, NULL, (uint8_t *)"<h2>Internal Server Error</h2>", 31 }
 	}
 };
 
@@ -111,8 +111,8 @@ zhttp_t response_with_invalid_error_code = {
 	.status = 909,
 	.ctype = "text/html",
 	.protocol = "HTTP/1.1",
-	.body = &( struct HTTPRecord * ){
-		&(struct HTTPRecord){ NULL, NULL, (uint8_t *)"<h2>Never</h2>", 14 }
+	.body = &( zhttpr_t * ){
+		&(zhttpr_t){ NULL, NULL, (uint8_t *)"<h2>Never</h2>", 14 }
 	}
 };
 
@@ -120,7 +120,7 @@ zhttp_t response_binary_body = {
 	.status = 200,
 	.ctype = "image/jpeg",
 	.protocol = "HTTP/1.1",
-	.body = (struct HTTPRecord **)uint8_body 
+	.body = (zhttpr_t **)uint8_body 
 };
 
 /*requests*/
@@ -443,7 +443,7 @@ zhttp_t *responses_to_send[] = {
 };
 
 
-void print_entity_list ( const char *element, struct HTTPRecord **list ) {
+void print_entity_list ( const char *element, zhttpr_t **list ) {
 	if ( element ) {
 		fprintf( stderr, "\n%s (%p) = ( ", element, list );
 	}

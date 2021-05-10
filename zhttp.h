@@ -182,7 +182,7 @@ typedef enum {
 } HttpContentType;
 
 
-struct HTTPRecord {
+typedef struct HTTPRecord {
 	HttpContentType type; //multipart or not?
 	const char *field; 
 	int size; 
@@ -203,7 +203,7 @@ struct HTTPRecord {
 		} * mpc;
 	} value;
 #endif
-};
+} zhttpr_t;
 
 
 typedef struct HTTPBody {
@@ -212,16 +212,16 @@ typedef struct HTTPBody {
 	char *host;
 	char *method;
 	char *protocol;
-	char *boundary;
+	char boundary[ 128 ];
 	int clen;  //content length
 	int mlen;  //message length (length of the entire received message)
 	int	hlen;  //header length
 	int status; //what was this?
 	int error;
  	unsigned char *msg;
-	struct HTTPRecord **headers;
-	struct HTTPRecord **url;
-	struct HTTPRecord **body;
+	zhttpr_t **headers;
+	zhttpr_t **url;
+	zhttpr_t **body;
 	//int rstatus;  //HEADER_PARSED, URL_PARSED, ...
 } zhttp_t;
 
@@ -243,14 +243,16 @@ int http_set_int( int *, int );
 
 char *http_set_char( char **, const char * );
 
-void *http_set_record( zhttp_t *, struct HTTPRecord ***, int, const char *, unsigned char *, int, int );
+void *http_set_record( zhttp_t *, zhttpr_t ***, int, const char *, unsigned char *, int, int );
 
 int http_set_error ( zhttp_t *entity, int status, char *message );
 
 unsigned char * zhttp_dupblk( const unsigned char *v, int vlen ) ;
 
+unsigned char *zhttp_append_to_uint8t ( unsigned char **, int *, unsigned char *, int );
+
 #ifdef DEBUG_H
- void print_httprecords ( struct HTTPRecord ** );
+ void print_httprecords ( zhttpr_t ** );
  void print_httpbody ( zhttp_t * );
 #else
  #define print_httprecords(...)
