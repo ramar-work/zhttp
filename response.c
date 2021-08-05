@@ -100,22 +100,24 @@ int main ( int argc, char *argv[] ) {
 
 	while ( cc->content ) {
 		unsigned char err[ 2048 ] = {0};
-		zhttp_t tmp = {0};
+		zhttp_t tmp = {0}, *tt = &tmp;
 		fprintf( stderr, "\nRESPONSE %d\n=========\n", r++ );
 
 		//Typical setup (these should NEVER fail)
-		http_set_status( &tmp, 200 );
-		http_set_ctype( &tmp, cc->type );
-		http_copy_content( &tmp, cc->content, cc->len ); 
+		http_set_status( tt, cc->status );
+		http_set_ctype( tt, cc->type );
 
 		//Do a random thing
 		for ( int i = 0; i < rand() % 10; i++ )  {
-			const char *word = words[rand() % wordslen];
-			http_copy_header( &tmp, "X-Type-Header", word );
+			const char *word = words[ rand() % wordslen ];
+			http_copy_header( tt, "X-Type-Header", word );
 		}
 
+		//Finally, copy the content
+		http_copy_content( tt, cc->content, cc->len ); 
+
 		//Realistically this should never fail
-		if ( !http_finalize_response( &tmp, (char *)err, sizeof( err ) ) ) {
+		if ( !http_finalize_response( tt, (char *)err, sizeof( err ) ) ) {
 			return 0;
 		}
 

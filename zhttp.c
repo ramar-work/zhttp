@@ -109,6 +109,7 @@ static const char *http_status[] = {
 	[HTTP_504] = "Gateway Timeout"
 };
 
+const char text_html[] = "text/html";
 
 //Set http errors
 static int set_http_error( zhttp_t *entity, HTTP_Error code ) {
@@ -482,6 +483,7 @@ static int parse_http_header ( zhttp_t *entity, char *err, int errlen ) {
 	//Define stuffs
 	const char *methods = "HEAD,GET,POST,PUT,PATCH,DELETE";
 	const char *protocols = "HTTP/1.1,HTTP/1.0,HTTP/1,HTTP/0.9";
+	char *port = NULL;
 	int walker = 0;
 	zWalker z = {0};
 
@@ -540,7 +542,13 @@ static int parse_http_header ( zhttp_t *entity, char *err, int errlen ) {
 	}
 
 	//Get host requested (not always going to be there)
-	entity->host = zhttp_msg_get_value( "Host: ", "\r", entity->msg, entity->hlen );
+	entity->host = zhttp_msg_get_value( "Host: ", "\r", entity->msg, entity->hlen );	
+	if ( entity->host && ( port = index( entity->host, ':' ) ) ) {
+		//Remove colon
+		entity->port = atoi( port + 1 );
+		memset( port, 0, strlen( port ) ); 
+	//entity->port = 80 || 443 || entity->host:*
+	}
 
 	//If we expect a body, parse it
 	if ( memstr( "POST,PUT,PATCH", entity->method, strlen( "POST,PUT,PATCH" ) ) ) {
@@ -622,120 +630,102 @@ zhttp_t * http_parse_response ( zhttp_t *entity, char *err, int errlen ) {
 
 
 //Finalize an HTTP request (really just returns a unsigned char, but this can handle it)
-zhttp_t * http_finalize_request ( zhttp_t *entity, char *err, int errlen ) {
+zhttp_t * http_finalize_request ( zhttp_t *en, char *err, int errlen ) {
 	unsigned char *msg = NULL, *hmsg = NULL;
-	int msglen = 0, hmsglen = 0;
-	int multipart = 0;
-	zhttpr_t **headers = entity->headers;
-	zhttpr_t **body = entity->body;
+	enum rtype { ZHTTP_APPWWW, ZHTTP_MULTIPART, ZHTTP_OTHER } rtype = ZHTTP_OTHER;
 	char clen[ 32 ] = {0};
+	en->clen = 0, en->mlen = 0, en->hlen = 0;
 
-	if ( !entity->protocol )
-		entity->protocol = "HTTP/1.1";
+	if ( !en->protocol ) {
+		en->protocol = "HTTP/1.1";
+	}
 
-	if ( !entity->path ) {
+	if ( !en->path ) {
 		snprintf( err, errlen, "%s", "No path specified with request." );
 		return NULL;
 	}
 
-	if ( !entity->method ) {
+	if ( !en->method ) {
 		snprintf( err, errlen, "%s", "No method specified with request." );
 		return NULL;
 	}
 
-	if ( !strcmp( entity->method, "POST" ) || !strcmp( entity->method, "PUT" ) ) {
-		if ( !entity->body && !entity->ctype ) {
-			snprintf( err, errlen, "Content-type not specified for %s request.", entity->method );
+	if ( !strcmp( en->method, "POST" ) || !strcmp( en->method, "PUT" ) ) {
+		if ( !en->body && !en->ctype ) {
+			snprintf( err, errlen, "Content-Type not specified for %s request.", en->method );
 			return NULL;
 		}
 
-		if ( ( multipart = ( memcmp( entity->ctype, "multi", 5 ) == 0 ) ) ) {
+		if ( !strcmp( en->ctype, "application/x-www-form-urlencoded" ) ) 
+			rtype = ZHTTP_APPWWW;	
+		else if ( !strcmp( en->ctype, "multipart/form-data" ) ) {
+			rtype = ZHTTP_MULTIPART;	
 			char *b = zhttp_rand_chars( 32 );
-			memcpy( entity->boundary, b, strlen( b ) );
-			memset( entity->boundary, '-', 6 );
+			memcpy( en->boundary, b, strlen( b ) );
+			memset( en->boundary, '-', 6 );
 			free( b );
 		}
 	}
 
-
 	//TODO: Catch each of these or use a static buffer and append ONE time per struct...
-	while ( headers && *headers ) {
-		zhttpr_t *r = *headers;
-		zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)r->field, strlen( r->field ) ); 
-		zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)": ", 2 ); 
-		zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)r->value, r->size ); 
-		zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)"\r\n", 2 ); 
-		headers++;
-	}
-
-	if ( msglen ) {
-		zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)"\r\n", 2 );
-		entity->hlen = msglen;
-	}
- 
-	//TODO: Catch each of these or use a static buffer and append ONE time per struct...
-	if ( strcmp( entity->method, "POST" ) == 0 || strcmp( entity->method, "PUT" ) == 0 ) {
+	if ( !strcmp( en->method, "POST" ) || !strcmp( en->method, "PUT" ) ) {
 		//app/xwww is % encoded
-		//multipart is not (but seperated differently)
-		if ( !multipart ) {
-			int n = 0;
-			while ( body && *body ) {
+		if ( rtype == ZHTTP_OTHER ) {
+			//Assumes JSON or a single file or something
+			zhttpr_t **body = en->body;
+			zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)(*body)->value, (*body)->size ); 
+		}
+		else if ( rtype == ZHTTP_APPWWW ) {
+			for ( zhttpr_t **body = en->body; body && *body; body++ ) {
 				zhttpr_t *r = *body;
-			#if 0
-				zhttp_uchar_join( &msg, &msglen, "&", r->field, "=" ); 
-				zhttp_uchar_join( &msg, &msglen, r->value, r->size - 1 );
-			#else
-				( n ) ? zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)"&", 1 ) : 0;
-				zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)r->field, strlen( r->field ) ); 
-				zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)"=", 1 ); 
-				zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)r->value, r->size - 1 ); 
-			#endif
-				body++;
+				if ( *en->body != *body ) {
+					zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)"&", 1 );
+				}
+				zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)r->field, strlen( r->field ) ); 
+				zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)"=", 1 ); 
+				zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)r->value, r->size ); 
 			}
 		}
 		else {
+			//Handle multipart requests
 			static const char cdisph[] = "Content-Disposition: " ;
 			static const char cdispt[] = "form-data;" ;
 			static const char nameh[] = "name=";
-
-			while ( body && *body ) {
+			for ( zhttpr_t **body = en->body; body && *body; body++ ) {
 				zhttpr_t *r = *body;
-			#if 0
-				zhttp_uchar_join( &msg, &msglen, entity->boundary, "\r\n" )
-			#else
-				zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)entity->boundary, strlen( entity->boundary ) ); 
-				zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)"\r\n", 2 ); 
-				zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)cdisph, sizeof( cdisph ) ); 
-				zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)cdispt, sizeof( cdispt ) ); 
-				zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)nameh, sizeof( nameh ) ); 
-				zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)"\"", 1 );
-				zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)r->field, strlen( r->field ) ); 
-				zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)"\"", 1 );
-				zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)"\r\n\r\n", 4 ); 
-				zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)r->value, r->size ); 
-				zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)"\r\n", 2 ); 
-			#endif
-				body++;
+				zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)en->boundary, strlen( en->boundary ) ); 
+				zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)"\r\n", 2 ); 
+				zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)cdisph, sizeof( cdisph ) ); 
+				zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)cdispt, sizeof( cdispt ) ); 
+				zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)nameh, sizeof( nameh ) ); 
+				zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)"\"", 1 );
+				zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)r->field, strlen( r->field ) ); 
+				zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)"\"", 1 );
+				zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)"\r\n\r\n", 4 ); 
+				zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)r->value, r->size ); 
+				zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)"\r\n", 2 ); 
 			}
-			zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)entity->boundary, strlen( entity->boundary ) ); 
-			zhttp_append_to_uint8t( &msg, &msglen, (unsigned char *)"--", 2 ); 
+			zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)en->boundary, strlen( en->boundary ) ); 
+			zhttp_append_to_uint8t( &msg, &en->clen, (unsigned char *)"--", 2 ); 
 		}
 	}
 
-	entity->clen = msglen - entity->hlen;
-	snprintf( clen, sizeof( clen ), "%d", entity->clen );
-
-	//There should be a cleaner way to handle this
-	struct t { const char *value, *fmt, reqd; } m[] = {
-		{ entity->method, "%s ", 1 },
-		{ entity->path, "%s ", 1 },
-		{ entity->protocol, "%s\r\n", 1 },
-		{ clen, "Content-Length: %s\r\n", strcmp(entity->method,"POST") == 0 ? 1 : 0 },
-		{ entity->ctype, "Content-Type: %s", strcmp(entity->method,"POST") == 0 ? 1 : 0 },
-		{ (multipart) ? entity->boundary : "", (multipart) ? ";boundary=\"%s\"\r\n" : "%s\r\n", strcmp(entity->method,"POST") == 0 ? 1 : 0 },
-		{ entity->host, "Host: %s\r\n" },
+	//TODO: Do this in a better way
+	snprintf( clen, sizeof( clen ), "%d", en->clen );
+	int expbody = !strcmp( en->method, "POST" ) || !strcmp( en->method, "PUT" );
+	struct t { const char *value, *fmt, reqd, add; } m[] = {
+		{ en->method, "%s ", 1, 1 },
+		{ en->path, "%s ", 1, 1 },
+		{ en->protocol, "%s\r\n", 1, 1 },
+		{ clen, "Content-Length: %s\r\n", expbody, en->clen > 0 ? 1 : 0  },
+		{ en->ctype, "Content-Type: %s", expbody, 1 },
+		{ ( rtype == ZHTTP_MULTIPART ) ? en->boundary : "", 
+			( rtype == ZHTTP_MULTIPART ) ? ";boundary=\"%s\"\r\n" : "%s\r\n", 
+			expbody, 1 },
+		{ en->host, "Host: %s\r\n", 1, 1 },
 	};
-
+	
+	//Now build the request header(s)
 	for ( int i = 0; i < sizeof(m)/sizeof(struct t); i++ ) {
 		if ( !m[i].reqd && !m[i].value )
 			continue;
@@ -743,28 +733,35 @@ zhttp_t * http_finalize_request ( zhttp_t *entity, char *err, int errlen ) {
 			snprintf( err, errlen, "%s", "Failed to add HTTP metadata to request." );
 			return NULL;
 		}
-		else {
+		else if ( m[i].add ) {
 			//Add whatever value
 			unsigned char buf[ 1024 ] = { 0 };
 			int len = snprintf( (char *)buf, sizeof(buf), m[i].fmt, m[i].value ); 
-			zhttp_append_to_uint8t( &hmsg, &hmsglen, buf, len );
-			entity->hlen += len;
+			zhttp_append_to_uint8t( &hmsg, &en->hlen, buf, len );
 		}
 	}
 
-	if ( !( entity->msg = malloc( msglen + hmsglen ) ) ) {
+	//Add any other headers
+	for ( zhttpr_t **headers = en->headers; headers && *headers; headers++ ) {
+		zhttpr_t *r = *headers;
+		zhttp_append_to_uint8t( &hmsg, &en->hlen, (unsigned char *)r->field, strlen( r->field ) ); 
+		zhttp_append_to_uint8t( &hmsg, &en->hlen, (unsigned char *)": ", 2 ); 
+		zhttp_append_to_uint8t( &hmsg, &en->hlen, (unsigned char *)r->value, r->size ); 
+		zhttp_append_to_uint8t( &hmsg, &en->hlen, (unsigned char *)"\r\n", 2 ); 
+	}
+
+	//Terminate the header
+	zhttp_append_to_uint8t( &hmsg, &en->hlen, (unsigned char *)"\r\n", 2 );
+
+	if ( !( en->msg = malloc( en->clen + en->hlen ) ) ) {
 		snprintf( err, errlen, "%s", "Failed to reallocate message buffer." );
 		return NULL;
 	}
 
-	memcpy( &entity->msg[0], hmsg, hmsglen );
-	entity->mlen = hmsglen; 
-	memcpy( &entity->msg[entity->mlen], msg, msglen );
-	entity->mlen += msglen; 
-
-	free( msg );
-	free( hmsg );
-	return entity;
+	memcpy( &en->msg[0], hmsg, en->hlen ), en->mlen += en->hlen; 
+	memcpy( &en->msg[en->mlen], msg, en->clen ), en->mlen += en->clen; 
+	free( msg ), free( hmsg );
+	return en;
 }
 
 
@@ -793,7 +790,6 @@ zhttp_t * http_finalize_response ( zhttp_t *entity, char *err, int errlen ) {
 		return NULL;
 	}
 
-	//ZHTTP_PRINTF( "HTTP BODY ptr: %p, size: %d\n", (*entity->body)->value, (*entity->body)->size ); 
 	if ( body && *body && ( !(*body)->value || !(*body)->size ) ) {
 		snprintf( err, errlen, "%s", "No body length specified with response." );
 		return NULL;
@@ -834,8 +830,7 @@ zhttp_t * http_finalize_response ( zhttp_t *entity, char *err, int errlen ) {
 		return NULL;
 	}
 
-	entity->msg = msg;
-	entity->mlen = msglen;
+	entity->msg = msg, entity->mlen = msglen;
 	return entity;
 }
 
@@ -855,7 +850,6 @@ char * http_set_char( char **k, const char *v ) {
 //...
 void * http_set_record
  ( zhttp_t *entity, zhttpr_t ***list, int type, const char *k, unsigned char *v, int vlen, int free ) {
-	int len = 0;
 	zhttpr_t *r = NULL;
 
 	//Block bad types in lieu of an enum
@@ -866,22 +860,17 @@ void * http_set_record
 	if ( !k || ( !v && vlen < 0 ) )
 		return NULL;
 
-	//We use entity->boundary as a hack to store the current index.
-	if ( !*entity->boundary ) {
-		memset( entity->boundary, 0, 4 );
-	}
-
 	//Create a record
 	if ( !( r = malloc( sizeof( zhttpr_t ) ) ) ) {
 		return NULL;
 	}
 
 	//Set the members
-	len = entity->boundary[ type ];
-	r->field = zhttp_dupstr( k ), r->size = vlen, r->value = v;
-
+	int len = 0;
+	len = entity->lengths[ type ];
+	r->field = zhttp_dupstr( k ), r->size = vlen, r->value = v, r->free = free;
 	zhttp_add_item( list, r, zhttpr_t *, &len );
-	entity->boundary[ type ] = len; //entity->size = vlen;
+	entity->lengths[ type ] = len; //entity->size = vlen;
 	return r;
 }
 
@@ -890,7 +879,7 @@ void * http_set_record
 static void http_free_records( zhttpr_t **records ) {
 	zhttpr_t **r = records;
 	while ( r && *r ) {
-		if ( *(*r)->field == '.' || (*r)->free ) {
+		if ( (*r)->free ) {
 			free( (*r)->value );
 		}
 
@@ -937,20 +926,9 @@ int http_set_error ( zhttp_t *entity, int status, char *message ) {
 	memset( err, 0, sizeof( err ) );
 	ZHTTP_PRINTF( "status: %d, mlen: %ld, msg: '%s'\n", status, strlen(message), message );
 
-	if ( !http_set_status( entity, status ) ) {
-		ZHTTP_PRINTF( "SET STATUS FAILED!" );
-		return 0;
-	}
-
-	if ( !http_set_ctype( entity, "text/html" ) ) {
-		ZHTTP_PRINTF( "SET CONTENT FAILED!" );
-		return 0;
-	}
-
-	if ( !http_copy_content( entity, (unsigned char *)message, strlen( message ) ) ) {
-		ZHTTP_PRINTF( "SET CONTENT FAILED!" );
-		return 0;
-	}
+	http_set_status( entity, status );
+	http_set_ctype( entity, text_html );
+	http_copy_content( entity, (unsigned char *)message, strlen( message ) );
 
 	if ( !http_finalize_response( entity, err, sizeof(err) ) ) {
 		ZHTTP_PRINTF( "FINALIZE FAILED!: %s", err );

@@ -80,9 +80,9 @@
 	
 #define http_set_host(ENTITY,VAL) \
 	http_set_char( &(ENTITY)->host, VAL )
-	
+
 #define http_set_content(ENTITY,VAL,VLEN) \
-	http_set_record( ENTITY, &(ENTITY)->body, 1, ".", VAL, VLEN, 1 )
+	http_set_record( ENTITY, &(ENTITY)->body, 1, ".", VAL, VLEN, 0 )
 
 #define http_copy_content(ENTITY,VAL,VLEN) \
 	http_set_record( ENTITY, &(ENTITY)->body, 1, ".", zhttp_dupblk((unsigned char *)VAL, VLEN), VLEN, 1 )
@@ -90,16 +90,14 @@
 #define http_copy_tcontent(ENTITY,VAL) \
 	http_set_record( ENTITY, &(ENTITY)->body, 1, ".", zhttp_dupstr(VAL), strlen(VAL), 1 )
 
-
 #define http_set_formvalue(ENTITY,KEY,VAL,VLEN) \
-	http_set_record( ENTITY, &(ENTITY)->body, 1, KEY, VAL, VLEN, 1 )
+	http_set_record( ENTITY, &(ENTITY)->body, 1, KEY, VAL, VLEN, 0 )
 
 #define http_copy_formvalue(ENTITY,KEY,VAL,VLEN) \
 	http_set_record( ENTITY, &(ENTITY)->body, 1, KEY, zhttp_dupblk((unsigned char *)VAL, VLEN), VLEN, 1 )
 
 #define http_copy_tformvalue(ENTITY,KEY,VAL) \
 	http_set_record( ENTITY, &(ENTITY)->body, 1, KEY, zhttp_dupstr(VAL), strlen(VAL), 1 )
-
 
 #define http_set_header(ENTITY,KEY,VAL) \
 	http_set_record( ENTITY, &(ENTITY)->headers, 0, KEY, (unsigned char *)VAL, strlen(VAL), 0 )
@@ -109,6 +107,15 @@
 
 #define http_copy_theader(ENTITY,KEY,VAL) \
 	http_set_record( ENTITY, &(ENTITY)->headers, 0, KEY, zhttp_dupstr(VAL), strlen(VAL), 1 )
+
+#define http_set_uripart(ENTITY,KEY,VAL) \
+	http_set_record( ENTITY, &(ENTITY)->url, 2, KEY, (unsigned char *)VAL, strlen(VAL), 0 )
+
+#define http_copy_uripart(ENTITY,KEY,VAL) \
+	http_set_record( ENTITY, &(ENTITY)->url, 2, KEY, (unsigned char *)zhttp_dupstr(VAL), strlen(VAL), 1 )
+
+#define http_copy_turipart(ENTITY,KEY,VAL) \
+	http_set_record( ENTITY, &(ENTITY)->url, 2, KEY, zhttp_dupstr(VAL), strlen(VAL), 1 )
 
 #define zhttp_dupstr(V) \
 	(char *)zhttp_dupblk( (unsigned char *)V, strlen(V) + 1 )
@@ -213,15 +220,18 @@ typedef struct HTTPBody {
 	char *method;
 	char *protocol;
 	char boundary[ 128 ];
+	char lengths[ 4 ];
+ 	unsigned char *msg;
 	int clen;  //content length
 	int mlen;  //message length (length of the entire received message)
 	int	hlen;  //header length
 	int status; //what was this?
-	int error;
- 	unsigned char *msg;
+	int port; //what was this?
 	zhttpr_t **headers;
 	zhttpr_t **url;
 	zhttpr_t **body;
+	int error;
+	char errmsg[ 1024 ];
 	//int rstatus;  //HEADER_PARSED, URL_PARSED, ...
 } zhttp_t;
 
