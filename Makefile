@@ -1,6 +1,5 @@
 # zhttp - A library for walking through memory.
 NAME = zhttp
-OS = $(shell uname | sed 's/[_ ].*//')
 LDFLAGS =
 IFLAGS = -I. -Ivendor/
 CLANGFLAGS = -g -O0 -Wall -Werror -std=c99 -Wno-unused 
@@ -15,10 +14,16 @@ PREFIX = /usr/local
 VERSION = 0.01
 SRC = zhttp.c
 OBJ = zhttp.o
+EXE =
 
 main: request
 main: response
 	@printf '' > /dev/null
+
+win: EXE = .exe
+win: request
+win: response
+	@echo '' > /dev/null
 
 install:
 	cp $(NAME).[ch] /usr/local/include/
@@ -31,14 +36,14 @@ debug: main
 	@printf '' > /dev/null
 
 request: $(OBJ)
-	$(CC) $(CFLAGS) -o request-test vendor/zwalker.c $(NAME).c request.c
+	$(CC) $(CFLAGS) -o request-test$(EXE) vendor/zwalker.c $(NAME).c request.c
 
 response: $(OBJ) tests/words.o
 response:
-	$(CC) $(CFLAGS) -o response-test vendor/zwalker.c $(NAME).c tests/words.o response.c
+	$(CC) $(CFLAGS) -o response-test$(EXE) vendor/zwalker.c $(NAME).c tests/words.o response.c
 
 tests/words.o: 
 	$(CC) $(CFLAGS) -c tests/words.c -o tests/words.o
 	
 clean:
-	rm -f *.o request-test response-test
+	rm -f *.o *.pdb *.ilk tests/*.o request-test response-test

@@ -219,10 +219,10 @@ unsigned char *zhttp_append_to_uint8t ( unsigned char **dest, int *len, unsigned
 
 //Extract value (a simpler code that can be used to grab values)
 static char * zhttp_msg_get_value ( const char *value, const char *chrs, unsigned char *msg, int len ) {
-	int start=0, end=0;
-	char *bContent = NULL;
+	int start = 0, end = 0;
+	char *content = NULL;
 
-	if ((start = memstrat( msg, value, len )) > -1) {
+	if ( ( start = memstrat( msg, value, len ) ) > -1 ) {
 		start += strlen( value );
 		msg += start;
 		int pend = -1;
@@ -243,16 +243,16 @@ static char * zhttp_msg_get_value ( const char *value, const char *chrs, unsigne
 		}
 
 		//Prepare for edge cases...
-		if ( ( bContent = malloc( len ) ) == NULL ) {
+		if ( ( content = malloc( len + 1 ) ) == NULL ) {
 			return NULL; 
 		}
 
 		//Prepare the raw buffer..
-		memset( bContent, 0, len );	
-		memcpy( bContent, msg, end );
+		memset( content, 0, len + 1 );	
+		memcpy( content, msg, end );
 	}
 
-	return bContent;
+	return content;
 }
 
 
@@ -543,7 +543,7 @@ static int parse_http_header ( zhttp_t *entity, char *err, int errlen ) {
 
 	//Get host requested (not always going to be there)
 	entity->host = zhttp_msg_get_value( "Host: ", "\r", entity->msg, entity->hlen );	
-	if ( entity->host && ( port = index( entity->host, ':' ) ) ) {
+	if ( entity->host && ( port = strchr( entity->host, ':' ) ) ) {
 		//Remove colon
 		entity->port = atoi( port + 1 );
 		memset( port, 0, strlen( port ) ); 

@@ -1,5 +1,8 @@
 src.vim
-*-test
 http-test-data.c
+*-test
 *.o
+*.exe
+*.ilk
+*.pdb
 TODO

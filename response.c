@@ -40,6 +40,14 @@
 #include <time.h>
 #include "zhttp.h"
 
+#ifndef _WIN32
+ #include <unistd.h>
+#else
+ #include <io.h>
+ #define write(FD,C,CLEN) _write(FD, C, CLEN)
+#endif
+
+
 
 extern const char * words[];
 extern const int wordslen;
