@@ -34,19 +34,31 @@
  * 12-02-20 - 
  * 
  * ------------------------------------------- */
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <zwalker.h>
+
+#ifndef _WIN32
+ #include <unistd.h>
+#else
+ #include <io.h>
+ #define write(FD,C,CLEN) _write(FD, C, CLEN)
+#endif
 
 #ifdef DEBUG_H
  #include <stdio.h>
- #define ZHTTP_PRINTF(...) \
-	fprintf( stderr, __VA_ARGS__ )
- #define ZHTTP_WRITE(a,b) \
+ #include <errno.h>
+ #include <fcntl.h>
+ #define ZHTTP_PRINTF(fb, ...) \
+	fprintf( fb, __VA_ARGS__ )
+ #define ZHTTP_WRITE(fd,a,b) \
 	write( 2, a, b )
+ #define print_httpbody(a) \
+	print_httpbody_to_file(a, "/dev/stderr")
 #else
- #define ZHTTP_PRINTF(...)
- #define ZHTTP_WRITE(...)
+ #define ZHTTP_PRINTF(fb, ...)
+ #define ZHTTP_WRITE(fd,...)
+ #define print_httpbody(a)
 #endif
 
 #ifndef ZHTTP_H
@@ -174,6 +186,7 @@ typedef enum {
 , ZHTTP_INCOMPLETE_PATH
 , ZHTTP_INCOMPLETE_PROTOCOL
 , ZHTTP_INCOMPLETE_HEADER
+, ZHTTP_INCOMPLETE_QUERYSTRING
 , ZHTTP_UNSUPPORTED_METHOD
 , ZHTTP_UNSUPPORTED_PROTOCOL
 , ZHTTP_MALFORMED_FIRSTLINE
@@ -262,9 +275,9 @@ unsigned char *zhttp_append_to_uint8t ( unsigned char **, int *, unsigned char *
 
 #ifdef DEBUG_H
  void print_httprecords ( zhttpr_t ** );
- void print_httpbody ( zhttp_t * );
+ void print_httpbody_to_file ( zhttp_t *, const char * );
 #else
  #define print_httprecords(...)
- #define print_httpbody(...)
+ #define print_httpbody_to_file(...)
 #endif
 #endif

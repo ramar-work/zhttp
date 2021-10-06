@@ -18,12 +18,12 @@ EXE =
 
 main: request
 main: response
-	@printf '' > /dev/null
+	@echo -n ''
 
 win: EXE = .exe
 win: request
 win: response
-	@echo '' > /dev/null
+	@echo -n ''
 
 install:
 	cp $(NAME).[ch] /usr/local/include/
@@ -33,7 +33,7 @@ uninstall:
 
 debug: CFLAGS += $(DFLAGS)
 debug: main 
-	@printf '' > /dev/null
+	@echo -n ''
 
 request: $(OBJ)
 	$(CC) $(CFLAGS) -o request-test$(EXE) vendor/zwalker.c $(NAME).c request.c
@@ -46,4 +46,4 @@ tests/words.o:
 	$(CC) $(CFLAGS) -c tests/words.c -o tests/words.o
 	
 clean:
-	rm -f *.o *.pdb *.ilk tests/*.o request-test response-test
+	rm -f *.o *.pdb *.ilk tests/*.o request-test request-test$(EXE) response-test response-test$(EXE)
